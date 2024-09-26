@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}Unauthorized{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <h1>401 Unauthorized</h1>
+            <h3>Sorry, these things might be the reason why the page didn't render:</h3>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <ul class="list-group list-group-flush mt-3">
+                <li class="list-group-item bg-light">The request has not been applied because it lacks valid
+                    authentication credentials for the target resource
+                </li>
+                <li class="list-group-item bg-light">You are trying to use a specific user session from a different
+                    location
+                </li>
+            </ul>
+        </div>
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top mt-4">
+{% endblock %}

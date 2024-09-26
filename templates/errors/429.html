@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}Too Many Requests{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <h1>429 Too Many Requests</h1>
+            <h3>Sorry, these things might be the reason why the page didn't render:</h3>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <ul class="list-group list-group-flush mt-3">
+                <li class="list-group-item bg-light">You are a bot and trying to access/trigger something too many
+                    times
+                </li>
+                <li class="list-group-item bg-light">We can't have you adding data to the database over a short period
+                    of time
+                </li>
+                <li class="list-group-item bg-light">We don't want our server to be overloaded with unnecessary
+                    requests
+                </li>
+                <li class="list-group-item bg-light">This is for protecting against malicious bots and people</li>
+            </ul>
+        </div>
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top mt-4">
+{% endblock %}

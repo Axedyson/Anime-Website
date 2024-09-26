@@ -1,0 +1,1119 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block lib_css %}
+    <!-- Justified Gallery CSS -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.7.0/css/justifiedGallery.min.css"
+          integrity="sha256-ZKOGvp7YVwX26g2d0ooDvbSBQSEiIi4Bd9FuK+12Zk0=" crossorigin="anonymous"/>
+    <!-- viewer CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.3.6/viewer.min.css"
+          integrity="sha256-q2KPUgEtqLingM3KNTp8Fm8/hM7rl8u949OVi2fL4A4=" crossorigin="anonymous"/>
+    <!-- Slim Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.23.0/slimselect.min.css"
+          integrity="sha256-szifIT2PLputZG3FrdgWbQWzC9EE2orSuwgBxuzOmN0=" crossorigin="anonymous"/>
+    <!-- SimpleBar CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplebar/4.2.1/simplebar.min.css"
+          integrity="sha256-KuTN+Py9Ut+AuYFyA/Jn+4ENdElDpLe92SYOiFnJr9g=" crossorigin="anonymous"/>
+{% endblock %}
+
+{% block file_css %}
+    <!-- Homemade CSS and jquery-comments CSS -->
+    {% assets "character_css" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+{% endblock %}
+
+{% block content %}
+    {% set per_load = request.cookies.get('per_load', default=15) | int %}
+    <div class="modal fade" id="control-amount-modal" tabindex="-1" role="dialog"
+         aria-labelledby="control-amount-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="control-amount-title">Change displaying of comments</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="rangeInput">Change Amount of comments to display per load</label>
+                    {% if per_load < 1 %}
+                        <input id="rangeInput" class="custom-range" type="range" value="1" max="50" min="1">
+                    {% elif per_load > 50 %}
+                        <input id="rangeInput" class="custom-range" type="range" value="50" max="50" min="1">
+                    {% else %}
+                        <input id="rangeInput" class="custom-range" type="range" value="{{ per_load }}" max="50" min="1">
+                    {% endif %}
+                    <span id="amount-value" class="badge badge-secondary">
+                        {% if per_load < 1 %}
+                            1
+                        {% elif per_load > 50 %}
+                            50
+                        {% else %}
+                            {{ per_load }}
+                        {% endif %}
+                    </span>
+                    <button type="button" class="btn btn-outline-primary float-right btn-sm apply-changes" disabled>
+                        Apply
+                        changes
+                    </button>
+                    <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if current_user.is_authenticated %}
+        <div class="modal fade" id="add-picture-modal" tabindex="-1" role="dialog"
+             aria-labelledby="add-picture-title"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="add-picture-title">Add picture</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="picture-form" method="POST"
+                              action="{{ url_for('characters.add_picture', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                              enctype="multipart/form-data" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="form-group">
+                                {{ form.character_picture.label }}
+                                <div class="d-block fileinput fileinput-new" data-provides="fileinput">
+                                    <div id="preview-character-pics"
+                                         class="fileinput-preview fileinput-exists mb-2"></div>
+                                    <div id="picture-selection-group">
+                                        <div class="btn-group" role="group"
+                                             aria-label="Select a new character picture">
+                                            <span class="btn btn-outline-secondary btn-file picture-selection">
+                                                <span class="fileinput-new">Select a new picture</span>
+                                                <span class="fileinput-exists">Change</span>
+                                                {{ form.character_picture }}
+                                            </span>
+                                        </div>
+                                        <div class="btn-group" role="group"
+                                             aria-label="Remove character picture">
+                                            <a href="#"
+                                               class="btn btn-outline-secondary	fileinput-exists picture-selection"
+                                               data-dismiss="fileinput">Remove</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">{{ form.character_picture.description }}</small>
+                            </div>
+                            <button id="add-picture-button" type="submit" class="btn btn-outline-primary">Submit for
+                                approval
+                            </button>
+                        </form>
+                        <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="pictures-modal" tabindex="-1" role="dialog"
+         aria-labelledby="pictures-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl full-modal-height" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pictures-title">Gallery of {{ character.name }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="pictures-modal-body" class="modal-body">
+                    <div id="character-pictures"></div>
+                    <div id="spinner" class="text-center my-5">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <hr id="child-footer" class="border-primary rounded-top mb-0">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-md-6 col-xl-3 mb-3 mb-md-0">
+            <div class="row mb-3">
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div id="vote-bar" class="row">
+                                {% if current_user.is_authenticated %}
+                                    <div class="col-6">
+                                        <button id="delete-vote-button" type="button" class="btn btn-danger btn-sm float-left"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                    <div class="col-6">
+                                        <div id="spinner" class="spinner-border float-right" role="status"><span class="sr-only">Loading...</span></div>
+                                    </div>
+                                {% else %}
+                                    <div class="col">
+                                        <div id="spinner" class="spinner-border float-right" role="status"><span class="sr-only">Loading...</span></div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="row justify-content-center mb-4">
+                                <input value="0" id="dial" data-displayPrevious=true data-angleOffset="180" data-fgColor="#00ea00" data-bgColor="#808080">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <select id="category">
+                                        <option data-placeholder="true"></option>
+                                        {% for category in character.universe.categories %}
+                                            {% set category_name = category.name %}
+                                            <option value="{{ category_name }}">{{ category_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <ul class="list-group list-group-flush">
+                            {% if character.official %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <strong>Global Rank</strong>
+                                    <span data-placement="right" title="<p class='h6 mt-1'>{% if global_rating.global_rank %}{{ global_rating.global_rank }}{% else %}?{% endif %}</p>" data-toggle="tooltip" id="number-statistic" 
+                                        class="badge badge-dark text-truncate global-rank">
+                                        {% if global_rating.global_rank %}{{ global_rating.global_rank }}{% else %}?{% endif %}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <strong>Global Category Rank</strong>
+                                    <span data-placement="right" title="<p class='h6 mt-1'>?</p>" data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate global-category-rank">
+                                        ?
+                                    </span>
+                                </li>
+                            {% endif %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Universe Rank
+                                <span data-placement="right" title="<p class='h6 mt-1'>{% if global_rating.universe_rank %}{{ global_rating.universe_rank }}{% else %}?{% endif %}</p>" data-toggle="tooltip" id="number-statistic" 
+                                    class="badge badge-primary text-truncate universe-rank">
+                                    {% if global_rating.universe_rank %}{{ global_rating.universe_rank }}{% else %}?{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Universe Category Rank
+                                <span data-placement="right" title="<p class='h6 mt-1'>?</p>" data-toggle="tooltip" id="number-statistic" class="badge badge-primary text-truncate universe-category-rank">
+                                    ?
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Overall Rating
+                                <span class="badge badge-success overall-score">
+                                    {% if global_rating.overall_score %}{{ global_rating.overall_score }}{% else %}?{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Category Rating
+                                <span class="badge badge-success category-score">
+                                    ?
+                                </span>
+                            </li>
+                        </ul>
+                        <div class="card-footer">
+                            <small class="text-muted">Rank & Score statistics</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="card shadow-sm">
+                        {% if character.user %}
+                            {% if not character.user.is_banned %}
+                                <p class="m-2 text-truncate">Submitted by: <b data-placement="top" title="<p class='h5 mt-1'>{{ character.user.username }}</p>" data-toggle="tooltip">{{ character.user.username }}</b></p>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <img id="submitted-by-profile-pic" class="card-img" src="{{ character.user.profile_picture }}" alt="profile picture">
+                                    </div>
+                                    <div class="col-8 px-4">
+                                        <small class="text-muted">Member
+                                            since: {{ character.user.joined_at.strftime("%A %B %d, %Y") }}</small>
+                                        {% if character.user.is_admin %}
+                                            <small class="d-block mt-2 text-primary">Admin</small>
+                                        {% else %}
+                                            <small class="d-block mt-2 text-muted">Regular User</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="row">
+                                    <div class="col-4">
+                                        <img id="submitted-by-profile-pic" class="card-img" src="{{ DEFAULT_PROFILE_PIC }}" alt="profile picture">
+                                    </div>
+                                    <div class="col-8 p-4">
+                                        <small class="text-muted">Submitted by a user who have been <span class="text-danger">BANNED</span></small>
+                                    </div>
+                                </div>    
+                            {% endif %}
+                        {% else %}
+                            <div class="row">
+                                <div class="col-4">
+                                    <img id="submitted-by-profile-pic" class="card-img" src="{{ DEFAULT_PROFILE_PIC }}" alt="profile picture">
+                                </div>
+                                <div class="col-8 p-4">
+                                    <small class="text-muted">Submitted by a user who has deleted their account</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-5 mb-4 mb-xl-0">
+            <div class="row justify-content-center">
+                <h1 id="do-not-clip-bottom-of-letters" class="text-truncate" data-placement="bottom" title="<p class='h3 mt-1'>{{ character.name }}</p>" data-toggle="tooltip">{{ character.name }}</h1>
+            </div>
+            <div class="row justify-content-center">
+                <img id="standalone-picture" class="p-1 rounded-lg bg-secondary" src="{{ character.character_picture }}" alt="character profile picture">
+            </div>
+            <div class="row">
+                <div class="col">
+                    <ul class="list-group list-group-flush shadow-sm mt-2 rounded">
+                        <li class="list-group-item rounded-top"><span class="float-left">Universe</span><a id="card-text" data-placement="left" title="<p class='h6 mt-1'>{{ character.universe.name }}</p>" data-toggle="tooltip" class="float-right text-truncate" href="{{ url_for('characters.render_universe_characters', universe_name=character.universe.name ) }}">{{ character.universe.name }}</a></li>
+                        <li class="list-group-item"><span class="float-left">Age</span><span class="float-right" data-placement="left" title="<p class='h6 mt-1'>{{ character.age }}</p>" data-toggle="tooltip"><span class="float-right">&nbsp;years</span><span id="card-text" class="float-right text-truncate">{{ character.age }}</span></span></li>
+                        <li class="list-group-item"><span class="float-left">Height</span><span class="float-right" data-placement="left" title="<p class='h6 mt-1'>{{ character.height }}</p>" data-toggle="tooltip"><span class="float-right">&nbsp;cm</span><span id="card-text" class="float-right text-truncate">{{ character.height }}</span></span></li>
+                        <li class="list-group-item"><span class="float-left">Weight</span><span class="float-right" data-placement="left" title="<p class='h6 mt-1'>{{ character.weight }}</p>" data-toggle="tooltip"><span class="float-right">&nbsp;kg</span><span id="card-text" class="float-right text-truncate">{{ character.weight }}</span></span></li>
+                        <li class="list-group-item"><span class="float-left">Species</span><span id="card-text" data-placement="left" title="<p class='h6 mt-1'>{{ character.species }}</p>" data-toggle="tooltip" class="float-right text-truncate">{{ character.species }}</span></li>
+                        <li class="list-group-item"><span class="float-left">Gender</span><span class="float-right">{{ character.gender }}</span></li>
+                        <li class="list-group-item"><span class="float-left">Occupation</span><span id="card-text" data-placement="left" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" class="float-right text-truncate">{{ character.occupation }}</span></li>
+                        <li class="list-group-item"><span class="float-left">Status</span><span class="float-right">{{ character.status }}</span></li>
+                        <li class="list-group-item rounded-bottom"><span class="float-left">Official</span><span class="float-right">{% if character.official %}Yes{% else %}No{% endif %}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div id="description-text-container" class="card border-dark p-3" data-simplebar data-simplebar-auto-hide="false">
+                <h5 class="mb-0">Character Description</h5>
+                <hr>
+                <p id="description-text" class="mb-0">{% for para in description %}{{ para }}<br>{% endfor %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-12 col-sm-5">
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with buttons of the following actions: comment
+            change display, {% if current_user.is_authenticated %}picture submission, {% endif %}and gallery view">
+                <div class="btn-group bg-white mr-2" role="group"
+                     aria-label="Change amount of comments to display per load">
+                    <button type="button" class="btn btn-outline-primary"
+                            data-toggle="modal"
+                            data-target="#control-amount-modal"><i class="fas fa-sliders-h fa-lg"></i>
+                    </button>
+                </div>
+                {% if current_user.is_authenticated %}
+                    <div class="btn-group bg-white mr-2" role="group"
+                         aria-label="Add a new character picture">
+                        <button id="add-picture-modal-trigger" type="button"
+                                class="btn btn-outline-primary"
+                                data-toggle="modal"
+                                data-target="#add-picture-modal"><i class="fas fa-camera-retro fa-lg"></i>
+                        </button>
+                    </div>
+                {% endif %}
+                <div class="btn-group bg-white" role="group" aria-label="View character pictures">
+                    <button type="button"
+                            class="btn btn-outline-primary"
+                            data-toggle="modal"
+                            data-target="#pictures-modal"><i class="fas fa-images fa-lg"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 offset-sm-1">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+                <div class="btn-toolbar float-sm-right mt-2 mt-sm-0" role="toolbar"
+                     aria-label="Toolbar with buttons of the following action: Load more comments, and edit either the pictures of the character or the character itself">
+                    <div id="load-more-button-container" class="btn-group bg-white mr-2" role="group" aria-label="Load more comments">
+                        <button id="load-more-button" type="button" class="btn btn-outline-primary">Load more</button>
+                    </div>
+                    <button type="button" class="btn btn-danger dropdown-toggle"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Edit
+                    </button>
+                    <div class="dropdown-menu shadow">
+                        <a id="get" class="dropdown-item"
+                           onclick="$('.dropdown-menu').on('click', function(e) {e.stopPropagation();})"
+                           href="{{ url_for('admin.edit_character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}">Character</a>
+                        <div class="dropdown-divider"></div>
+                        <a id="get" class="dropdown-item"
+                           onclick="$('.dropdown-menu').on('click', function(e) {e.stopPropagation();})"
+                           href="{{ url_for('admin.edit_pictures', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}">Pictures</a>
+                    </div>
+                </div>
+            {% else %}
+                <div id="load-more-button-container" class="btn-group bg-white float-sm-right mt-2 mt-sm-0" role="group" aria-label="Load more comments">
+                    <button id="load-more-button" type="button" class="btn btn-outline-primary">Load more</button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <hr id="child-footer" class="border-secondary rounded-pill">
+    <div id="comments-container"></div>
+    <hr id="child-footer" class="border-primary rounded-top mt-2">
+{% endblock %}
+
+{% block lib_js %}
+    <!-- jquery-textcomplete JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.5/jquery.textcomplete.min.js"
+            integrity="sha256-1brAOvohmk3rYwnxisfQcHAYh5hL0TCDGeocohXcF5k=" crossorigin="anonymous"></script>
+    <!-- Linkify JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.8/linkify.min.js"
+            integrity="sha256-b8aRDYEOoOLGpyaXMI3N2nWUbjSeQ2QxzKjmPnCa4yA=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.8/linkify-jquery.min.js"
+            integrity="sha256-F70q7AGz3CYOo2UIkomPSg5xAnO52dJ646kytZ7lSEQ=" crossorigin="anonymous"></script>
+    <!-- timeago JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"
+            integrity="sha256-0+5OfvOxkLHqpLPPwy9pDjug8N3cwaqcmleaxnR5VS8=" crossorigin="anonymous"></script>
+    <!-- Justified Gallery JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.7.0/js/jquery.justifiedGallery.min.js"
+            integrity="sha256-bIPvSCQ7+G5GbIXDt2B+9AMpCmFtxTVLU+aWAIPzL8I=" crossorigin="anonymous"></script>
+    <!-- viewer JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.3.6/viewer.min.js"
+            integrity="sha256-vJ9Jq4hWRNWh4wj3ZszaBKjujB6jwD/QVncLUJfX4wc=" crossorigin="anonymous"></script>
+    <!-- jquery-Knob JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js"
+            integrity="sha256-2144q+NOM/XU6ZxSqRTJ8P0W/CkY6zXc6mXYt4+mF9s=" crossorigin="anonymous"></script>
+    <!-- Slim Select JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.23.0/slimselect.min.js"
+            integrity="sha256-WvlDiM8q2Y7as4nE7vhzcEUZwwomBvDHV1w4R/+TCQY=" crossorigin="anonymous"></script>
+    <!-- SimpleBar JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplebar/4.2.1/simplebar.min.js"
+            integrity="sha256-HnK5kukrBNKjtb6Agv0oBLwovaMdWG+LfPDnI5BLP2Y=" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block file_js %}
+    <!-- Homemade JS, jquery-comments JS, and jquery-viewer JS -->
+    {% assets "character_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let selectors = [{% if character.official %}$(".global-rank"), $(".global-category-rank"),{% endif %}$(".universe-rank"), $(".universe-category-rank"), $(".overall-score"), $(".category-score")];
+            let $loadMoreButtonContainer = $("#load-more-button-container");
+            let $pictureSelectionGroup = $("#picture-selection-group");
+            let $mainPicturesModal = $(".modal-dialog-scrollable");
+            let $controlAmountModal = $("#control-amount-modal");
+            let $picturesModalBody = $("#pictures-modal-body");
+            let $characterPictures = $("#character-pictures");
+            let $commentsContainer = $('#comments-container');
+            let $deleteVoteButton = $("#delete-vote-button");
+            let $loadMoreButton = $('#load-more-button');
+            let $amountOfComments = $("#amount-value");
+            let $changeAmountRange = $("#rangeInput");
+            let $picturesModal = $("#pictures-modal");
+            let $applyChanges = $(".apply-changes");
+            let $categorySelect = $("#category");
+            let $spinner = $("[id=spinner]");
+            let $knob = $("#dial");
+
+            let rateBlock = false;
+            let blockRelease = false;
+            let submitSameValue = true;
+
+            let select = new SlimSelect({
+                select: '#category',
+                placeholder: 'Choose a category...',
+                hideSelectedOption: true,
+                searchText: "No category found",
+                searchFocus: false,
+                searchHighlight: true,
+                showOptionTooltips: true
+            });
+
+            $knob.knob({
+                'release': function () {
+                    if (!submitSameValue) {
+                        if (!blockRelease) {
+                            sendRateAjax();
+                        }
+                    } else {  // For scroll wheel behavior.
+                        submitSameValueOnUnknownValueLoad();
+                    }
+                },
+            });
+
+            let sendRateAjax = function () {
+                if (!rateBlock) {
+                    // Selecting the second spinner in the dom.
+                    $($spinner[1]).css('display', 'block');
+                    $deleteVoteButton.css('display', 'none');
+                    rateBlock = true;
+                    $.ajax({
+                        type: 'POST',
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '{{ url_for('characters.rate', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}',
+                        data: JSON.stringify({'score': !$knob.val() || $knob.val() === '?' ? 0 : parseInt($knob.val()), 'category': select.selected()}),
+                        success: function (responseData) {
+                            // I'm setting this "submitSameValue" to false here so the user can't submit the same value that he/her just submitted
+                            // Inside the error function handler it will be set to true so the user can submit the same value again (0) by the "triggerUnknownKnobValue" function
+                            submitSameValue = false;
+                            rateBlock = false;
+                            $deleteVoteButton.css('display', 'block');
+                            insertFlashMessage(`Your score:\u00A0${responseData.score}\u00A0has been successfully submitted under the category:\u00A0${responseData.category}`, 'success');
+                            if (responseData.score !== parseInt($knob.val()) && responseData.category === select.selected()) sendRateAjax();
+                        },
+                        complete: function () {
+                            // Selecting the second spinner in the dom.
+                            $($spinner[1]).css('display', 'none');
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                            triggerUnknownKnobValue();
+                            rateBlock = false;
+                        }
+                    });
+                }
+            };
+
+            function submitSameValueOnUnknownValueLoad() {
+                if (submitSameValue) {
+                    sendRateAjax();
+                }
+            }
+
+            function triggerUnknownKnobValue() {
+                submitSameValue = true;
+                $deleteVoteButton.css('display', 'none');
+                $knob.val(0).trigger('change');
+                $knob.val('?');
+            }
+
+            $('canvas').on('mousedown', function (event) {
+                if (event.which === 1) {
+                    let $this = $(this);
+                    $this.on('mouseleave', function () {
+                        $('body').one('mouseup', function () {
+                            submitSameValueOnUnknownValueLoad();
+                        });
+                    });
+                    $this.on('mouseup', function () {
+                        $(this).off('mouseleave');
+                        submitSameValueOnUnknownValueLoad();
+                    });
+                }
+            });
+
+            $knob.on('blur keypress', function (event) {
+                if (event.key === "Enter") {
+                    submitSameValueOnUnknownValueLoad();
+                } else if (event.type === 'blur') {
+                    submitSameValueOnUnknownValueLoad();
+                }
+            });
+
+            $categorySelect.on('change', function () {
+                $.ajax({
+                    type: 'GET',
+                    url: `{{ url_for('characters.rating', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}?category=${select.selected()}`,
+                    success: function (responseData) {
+                        if (responseData.user_score || typeof responseData.user_score === 'number') {
+                            $deleteVoteButton.css('display', 'block');
+                            $knob.val(responseData.user_score).trigger('change');
+                        } else {
+                            triggerUnknownKnobValue();
+                        }
+                        let data = [{% if character.official %}responseData.global_rank, responseData.global_category_rank,{% endif %}responseData.universe_rank, responseData.universe_category_rank, responseData.overall_score, responseData.category_score];
+                        selectors.forEach(function (selector, i) {
+                            if (data[i]) {
+                                selector.html(data[i]);
+                                if (selector.attr('class') !== 'overall-score' && selector.attr('class') !== 'category-score') {
+                                    $(selector).attr('data-original-title', `<p class='h6 mt-1'>${data[i]}</p>`);
+                                }
+                            } else {
+                                selector.html('?');
+                                if (selector.attr('class') !== 'overall-score' && selector.attr('class') !== 'category-score') {
+                                    $(selector).attr('data-original-title', "<p class='h6 mt-1'>?</p>");
+                                }
+                            }
+                        });
+                    },
+                    beforeSend: function () {
+                        // Selecting the second spinner in the dom.
+                        $($spinner[1]).css('display', 'block');
+                        selectors.forEach(function (selector) {
+                            selector.html(`<div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div>`);
+                        });
+                        select.disable();
+                        rateBlock = true;
+                        blockRelease = true;
+                        triggerUnknownKnobValue();
+                        // The reason why I'm setting "submitAnyValue" to "false" is so the user can't submit the same
+                        // value again, if the category happens to have the users score on it. "triggerUnknownKnobValue"
+                        // is setting "submitAnyValue" to true.
+                        submitSameValue = false;
+                    },
+                    complete: function () {
+                        blockRelease = false;
+                        rateBlock = false;
+                        select.enable();
+                        // Selecting the second spinner in the dom.
+                        $($spinner[1]).css('display', 'none');
+                    },
+                    error: function (data) {
+                        let json = data.responseJSON;
+                        if (json !== undefined) {
+                            insertFlashMessage(json.message);
+                        } else {
+                            insertFlashMessage("Something went wrong, sorry");
+                        }
+                        triggerUnknownKnobValue();
+                    }
+                });
+            });
+            {% if current_user.is_authenticated %}
+                $deleteVoteButton.on('click', function () {
+                    // Selecting the second spinner in the dom.
+                    $($spinner[1]).css('display', 'block');
+                    $deleteVoteButton.attr('disabled', true).html(`<div class="spinner-grow spinner-grow-sm" role="status"><span class="sr-only">Loading...</span></div>`);
+                    rateBlock = true;
+                    let category = select.selected();
+                    let score = $knob.val();
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `{{ url_for('characters.delete_rate', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}?category=${select.selected()}`,
+                        success: function () {
+                            insertFlashMessage(`Your score:\u00A0${score}\u00A0has been successfully deleted under the category:\u00A0${category}`, 'success');
+                        },
+                        complete: function () {
+                            triggerUnknownKnobValue();
+                            rateBlock = false;
+                            $deleteVoteButton.attr('disabled', false).html(`<i class="fas fa-trash-alt"></i>`);
+                            // Selecting the second spinner in the dom.
+                            $($spinner[1]).css('display', 'none');
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                });
+            {% endif %}
+
+            $knob.val('?');
+
+            let picturesPage = 1;
+            let seed = Math.random();
+            let picturesBlock= false;
+
+            let finishedFirstLoad = false;
+            let fixImages = false;
+
+            function checkGalleryBottom() {
+                let controller = $characterPictures.data('jg.controller');
+                let settings = controller.settings;
+                if ($characterPictures.height() - settings.rowHeight <= $picturesModalBody.scrollTop() + $picturesModalBody.height()) {
+                    retrievePictures();
+                }
+            }
+
+            $picturesModal.on('shown.bs.modal', function () {
+                retrievePictures();
+                $picturesModal.off('shown.bs.modal').on('shown.bs.modal', function () {
+                    if (fixImages) $characterPictures.justifiedGallery();
+                    checkGalleryBottom();
+                });
+            });
+
+            $picturesModal.on('hide.bs.modal', function () {
+                // If we didn't successfully finished the first load when the user closed the modal, then fix the images
+                // the next time the user opens the modal
+                fixImages = !finishedFirstLoad;
+            });
+
+            function retrievePictures() {
+                if (!picturesBlock) {
+                    picturesBlock = true;
+                    $.ajax({
+                        type: 'GET',
+                        url: `{{ url_for('characters.pictures', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}?page=${picturesPage}&seed=${seed}`,
+                        success: function (pictures) {
+                            if (pictures.length) {
+                                pictures.forEach(function (item) {
+                                    $characterPictures.append(`<div class='animated rotateInDownLeft'><img id="gallery-img" alt="character picture" src="${item}"/></div>`);
+                                });
+                                if (!$characterPictures.hasClass('justified-gallery')) {
+                                    $characterPictures.justifiedGallery({
+                                        rowHeight: 270,
+                                        maxRowHeight: '200%',
+                                        refreshSensitivity: 17,
+                                        captions: false,
+                                    });
+                                    Viewer.setDefaults({
+                                        fullscreen: false,
+                                        title: imageData => `(${imageData.naturalWidth} × ${imageData.naturalHeight})`
+                                    });
+                                    $characterPictures.viewer();
+                                    $picturesModalBody.on('scroll', checkGalleryBottom);
+                                    $(window).on('resize', checkGalleryBottom);
+                                    finishedFirstLoad = true; // at this time we have finished the first image load
+                                } else {
+                                    $characterPictures.justifiedGallery('norewind');
+                                    $characterPictures.viewer('update');
+                                }
+                                picturesPage++;
+                                picturesBlock = false;
+                                checkGalleryBottom();
+                            } else {
+                                // This doesn't work totally perfect on phones and probably on low end CPU's too
+                                // the reason is that this can run before Justified Gallery has organized the pictures.
+                                // I have thought this through and I've come to the conclusion that we should not try to fix this :D
+                                // because this happens pretty rarely.
+                                $(insertStaticAlert("No more pictures available, sorry")).insertAfter($characterPictures);
+                                $mainPicturesModal.removeClass('full-modal-height');
+                            }
+                        },
+                        beforeSend: function () {
+                            // Selecting the first spinner in the dom.
+                            $($spinner[0]).css('display', 'block');
+                        },
+                        complete: function () {
+                            // Selecting the first spinner in the dom.
+                            $($spinner[0]).css('display', 'none');
+                        },
+                        error: function (data) {
+                            $mainPicturesModal.removeClass('full-modal-height');
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                $(insertStaticAlert(json.message)).insertAfter($characterPictures);
+                            } else {
+                                $(insertStaticAlert("Something went wrong, sorry")).insertAfter($characterPictures);
+                            }
+                        }
+                    });
+                }
+            }
+
+            $("#description-text").linkify({target: "_blank"});
+            {% if current_user.is_authenticated %}
+                let $addPictureModalTrigger = $("#add-picture-modal-trigger");
+                let $addPictureButton = $("#add-picture-button");
+                let $pictureSelection = $(".picture-selection");
+                let $addPictureModal = $("#add-picture-modal");
+                let $pictureForm = $("#picture-form");
+                let $pictureInput = $("#character_picture");
+                let $fileInput = $(".fileinput");
+                function applyValidInput() {
+                    $('<div id="picture" class="valid-feedback d-block"></div>').insertAfter($fileInput);
+                    $("#picture.valid-feedback").text("Submitted for approval, have patience!");
+                    if ($pictureSelection.hasClass('btn-outline-secondary')) {
+                        $pictureSelection.removeClass('btn-outline-secondary');
+                        $pictureSelection.addClass('btn-outline-success');
+                    } else if ($pictureSelection.hasClass('btn-outline-danger')) {
+                        $pictureSelection.removeClass('btn-outline-danger');
+                        $pictureSelection.addClass('btn-outline-success');
+                        $('#picture.invalid-feedback').remove();
+                    }
+                    $fileInput.fileinput('clear');
+                }
+                $pictureSelection.on('click', function () {
+                    if ($pictureSelection.hasClass('btn-outline-success')) {
+                        $pictureSelection.removeClass('btn-outline-success');
+                        $pictureSelection.addClass('btn-outline-secondary');
+                        $('#picture.valid-feedback').remove();
+                    }
+                });
+                function resetAddPictureInteraction() {
+                    $fileInput.fileinput('clear');
+                    if ($pictureSelection.hasClass('btn-outline-danger')) {
+                        $pictureSelection.removeClass('btn-outline-danger');
+                        $pictureSelection.addClass('btn-outline-secondary');
+                        $('#picture.invalid-feedback').remove();
+                    } else if ($pictureSelection.hasClass('btn-outline-success')) {
+                        $pictureSelection.removeClass('btn-outline-success');
+                        $pictureSelection.addClass('btn-outline-secondary');
+                        $('#picture.valid-feedback').remove();
+                    }
+                }
+                function showAddPictureError(message) {
+                    if (!$("#picture.invalid-feedback").length) {
+                        $('<div id="picture" class="invalid-feedback d-block"></div>').insertAfter($fileInput);
+                    } else {
+                        $("#picture.invalid-feedback").text("");
+                    }
+                    $.each(message, function (index, value) {
+                        $("#picture.invalid-feedback").append(value);
+                    });
+                    if ($pictureSelection.hasClass('btn-outline-secondary')) {
+                        $pictureSelection.removeClass('btn-outline-secondary');
+                        $pictureSelection.addClass('btn-outline-danger');
+                    } else if ($pictureSelection.hasClass('btn-outline-success')) {
+                        $pictureSelection.removeClass('btn-outline-success');
+                        $pictureSelection.addClass('btn-outline-danger');
+                        $('#picture.valid-feedback').remove();
+                    }
+                }
+                $addPictureModal.on('shown.bs.modal', function () {
+                    $pictureInput.trigger('focus');
+                });
+                $addPictureModalTrigger.on('click', function () {
+                    resetAddPictureInteraction();
+                });
+                $pictureForm.on('submit', function (event) {
+                    let form_data = new FormData($pictureForm[0]);
+                    $.ajax({
+                        type: $pictureForm.attr('method'),
+                        url: $pictureForm.attr('action'),
+                        data: form_data,
+                        enctype: 'multipart/form-data',
+                        contentType: false,
+                        cache: false,
+                        processData: false,
+                        success: function () {
+                            resetAddPictureInteraction();
+                            applyValidInput();
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                showAddPictureError(json.picture_errors);
+                            } else {
+                                showAddPictureError(["Something went wrong, sorry"]);
+                            }
+                        },
+                        beforeSend: function () {
+                            $addPictureButton.attr('disabled', true).html("Please wait...");
+                        },
+                        complete: function () {
+                            $pictureSelectionGroup.css('display', 'block');
+                            $addPictureButton.attr('disabled', false).html("Submit for approval");
+                        }
+                    });
+                    event.preventDefault();
+                });
+            {% endif %}
+            let previousAmountRangeVal = parseInt($changeAmountRange.val());
+            $controlAmountModal.on('shown.bs.modal', function () {
+                $changeAmountRange.trigger('focus')
+            });
+            $changeAmountRange.on('input', function () {
+                if (parseInt($changeAmountRange.val()) === previousAmountRangeVal) {
+                    $applyChanges.attr('disabled', true).html("Apply changes");
+                } else {
+                    $applyChanges.attr('disabled', false).html("Apply changes");
+                }
+                $amountOfComments.html($changeAmountRange.val());
+            });
+            $applyChanges.on('click', function () {
+                $applyChanges.attr('disabled', true).html("Changes applied!");
+                let amountValue = parseInt($changeAmountRange.val());
+                if (amountValue > 50) {
+                    insertFlashMessage("You can't display more than 50 comments per load, defaulting to 50");
+                    amountValue = 50
+                } else if (amountValue < 1) {
+                    insertFlashMessage("You can't display less than 1 comment per load, defaulting to 1");
+                    amountValue = 1
+                }
+                previousAmountRangeVal = amountValue;
+                Cookies.set('per_load', amountValue, {expires: 365, path: '/characters'});
+            });
+            $loadMoreButton.on('click', function () {
+                $loadMoreButton.attr('disabled', true).html("Please wait...");
+                $.data($commentsContainer.get(0), 'comments').fetchNext();
+            });
+
+            function applytimeagoStyling() {
+                $(" time").each(function () {
+                    $(this).attr('datetime', ($(this).attr('data-original'))).addClass('timeago');
+                });
+                $("time.timeago").timeago();
+            }
+
+            let secondLoad = false;
+            let loadingComments = false;
+            let loadedUsers = new Map();
+            let loadedComments = new Map();
+
+            let newestCommentId = {% if newest_comment_id %}{{ newest_comment_id }}{% else %}null{% endif %};
+            let nextCommentId = null;
+            let lastCommentId = null;
+
+            function saveComment(data) {
+                Object.keys(data.pings).forEach(function (userId) {
+                    let fullname = data.pings[userId];
+                    let pingText = '@' + fullname;
+                    data.content = data.content.replace(new RegExp('@' + userId + '(?!\\S)', 'g'), pingText);
+                });
+                return data;
+            }
+
+            $commentsContainer.comments({
+                currentUserId: {% if current_user.is_authenticated %}{{ current_user.id }}{% else %}null{% endif %},
+                profilePictureURL: '{% if current_user.is_authenticated %}{{ current_user.profile_picture }}{% else %}{% endif %}',
+                currentUserIsAdmin: {% if current_user.is_authenticated and current_user.is_admin %}true{% else %}false{% endif %},
+                textareaRows: 1,
+                highlightColor: '#007bff',
+                textareaMaxRows: 12,
+                maxRepliesVisible: 3,
+                enableDeletingCommentWithReplies: true,
+                defaultNavigationSortKey: 'newest',
+                readOnly: {% if current_user.is_authenticated %}false{% else %}true{% endif %},
+                enablePinging: true,
+                enableHashtags: true,
+                searchUsers: function (term, success, error) {
+                    if (!loadingComments) {
+                        $.ajax({
+                            type: 'GET',
+                            url: `{{ url_for('characters.comment_users', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}?last_comment_id=${lastCommentId}&newest_comment_id=${newestCommentId}`,
+                            success: function (usersArray) {
+                                let users = Array.from(loadedComments.values());
+                                if (!usersArray.length) {
+                                    if (users.length) insertFlashMessage("No users are pingable because their comments you see right now have been deleted", 'Info');
+                                    else insertFlashMessage("No users to ping since no comments from other people have been loaded", 'Info');
+                                    success(usersArray);
+                                } else {
+                                    let isNotSelfUsersArray = usersArray.filter(function (user) {
+                                        return user.id !== {% if current_user.is_authenticated %}{{ current_user.id }}{% else %}null{% endif %};
+                                    });
+                                    if (!isNotSelfUsersArray.length) {
+                                        if (users.length) insertFlashMessage("No users are pingable because their comments you see right now have been deleted", 'Info');
+                                        else insertFlashMessage("No users to ping since no comments from other people have been loaded", 'Info');
+                                        success(isNotSelfUsersArray);
+                                    } else {
+                                        users.forEach(function (item) {
+                                            isNotSelfUsersArray.forEach(function (item2) {
+                                                if (item.id === item2.id) if (item.fullname !== item2.fullname) item2.fullname = item.fullname;
+                                            });
+                                        });
+                                        let containsSearchTermUsersArray = isNotSelfUsersArray.filter(function (user) {
+                                            return user.fullname.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+                                        });
+                                        let filteredUsers = users.filter(function (user) {
+                                            for (let uniqueUser of containsSearchTermUsersArray) {
+                                                if (user.id === uniqueUser.id && user.fullname !== uniqueUser.fullname) return false;
+                                            }
+                                            return user.fullname.toLowerCase().indexOf(term.toLowerCase()) !== -1;
+                                        });
+                                        if (containsSearchTermUsersArray.length !== filteredUsers.length) {
+                                            insertFlashMessage("Unfortunately some user(s) you might be searching for can't be pinged because their comment(s) have been deleted", 'Info');
+                                        }
+                                        success(containsSearchTermUsersArray);
+                                    }
+                                }
+                            },
+                            error: function (data) {
+                                let json = data.responseJSON;
+                                if (json !== undefined) {
+                                    insertFlashMessage(json.message);
+                                } else {
+                                    insertFlashMessage("Something went wrong, sorry");
+                                }
+                                error();
+                            }
+                        });
+                    } else {
+                        insertFlashMessage("Please wait till the new comments have been loaded :)", 'Warning');
+                        error();
+                    }
+                },
+                getComments: function (success) {
+                    loadingComments = secondLoad;
+                    $.ajax({
+                        type: 'GET',
+                        url: `{{ url_for('characters.comments', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}?newest_comment_id=${newestCommentId}&next_comment_id=${nextCommentId}`,
+                        success: function (commentsArray) {
+                            let differentNames = false;
+                            commentsArray[0].forEach(function (item) {
+                                if (!item.created_by_current_user) {
+                                    if (!loadedUsers.has(item.creator)) {
+                                        loadedUsers.set(item.creator, item.fullname);
+                                        loadedComments.set(item.id, {'id': item.creator, 'fullname': item.fullname});
+                                    } else if (loadedUsers.get(item.creator) !== item.fullname) {
+                                        if (!differentNames) differentNames = true;
+                                        loadedUsers.set(item.creator, item.fullname);
+                                        loadedComments.set(item.id, {'id': item.creator, 'fullname': item.fullname});
+                                    }
+                                }
+                            });
+                            let properCommentsArray = commentsArray[0].map(saveComment);
+                            if (differentNames) insertFlashMessage("Some comment(s) you have loaded have been posted by a user(s) that just changed their username", 'Info');
+                            if (secondLoad && !commentsArray[0].length) insertFlashMessage("No more comments available, sorry");
+                            if (!secondLoad) secondLoad = true;
+                            lastCommentId = commentsArray[2].last_comment_id;
+                            nextCommentId = commentsArray[2].next_comment_id;
+                            success(properCommentsArray);
+                            applytimeagoStyling();
+                            $(".navigation-wrapper li[class='active']").click();
+                            loadingComments = false;
+                            if (commentsArray[1].more_comments) {
+                                $loadMoreButtonContainer.css('display', 'inline-block');
+                                $loadMoreButton.removeAttr('disabled', false).html("Load more");
+                            } else {
+                                $loadMoreButtonContainer.css('display', 'none');
+                            }
+                        },
+                        error: function () {
+                            insertFlashMessage("Something went wrong, sorry");
+                            loadingComments = false;
+                        }
+                    });
+                },
+                postComment: function (data, success) {
+                    let oldPings = data.pings;
+                    let displayError = false;
+                    Object.keys(oldPings).forEach(function (userId) {
+                        let regex = new RegExp('@' + userId + '(?!\\S)');
+                        if (!regex.test(data.content)) {
+                            if (!displayError) displayError = true;
+                            delete data.pings[userId];
+                        }
+                    });
+                    if (displayError) insertFlashMessage("User text pings must have a minimum of one space after them", 'Warning');
+                    data.content = data.content.replace(/([\s\n]+$)/, '');
+                    data.created = getCorrectLocalClientISOTime();
+                    $.ajax({
+                        type: 'POST',
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '{{ url_for('characters.add_comment', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}',
+                        data: JSON.stringify(data),
+                        success: function (comment) {
+                            let newPings = comment.pings;
+                            if (Object.keys(newPings).length < Object.keys(oldPings).length) insertFlashMessage("Some pinged user(s) have deleted their account(s)", 'Info');
+                            let userPingUsernameChange = false;
+                            for (let user_id of Object.keys(newPings)) {
+                                if (oldPings[user_id] && oldPings[user_id] !== newPings[user_id]) {
+                                    userPingUsernameChange = true;
+                                    break;
+                                }
+                            }
+                            if (userPingUsernameChange) insertFlashMessage("Don't get confused by the username change by the pinged user(s)", "Info");
+                            success(saveComment(comment));
+                            applytimeagoStyling();
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                },
+                putComment: function (data, success) {
+                    let oldPings = data.pings;
+                    let displayError = false;
+                    Object.keys(oldPings).forEach(function (userId) {
+                        let regex = new RegExp('@' + userId + '(?!\\S)');
+                        if (!regex.test(data.content)) {
+                            if (!displayError) displayError = true;
+                            delete data.pings[userId];
+                        }
+                    });
+                    if (displayError) insertFlashMessage("User text pings must have minimum one space after them", 'Warning');
+                    data.content = data.content.replace(/([\s\n]+$)/, '');
+                    data.modified = getCorrectLocalClientISOTime();
+                    $.ajax({
+                        type: 'PUT',
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: `/comments/${data.id}/update`,
+                        data: JSON.stringify(data),
+                        success: function (comment) {
+                            let newPings = comment.pings;
+                            if (Object.keys(newPings).length < Object.keys(oldPings).length) insertFlashMessage("Some pinged user(s) have deleted their account(s)", 'Info');
+                            let userPingUsernameChange = false;
+                            for (let user_id of Object.keys(newPings)) {
+                                if (oldPings[user_id] && oldPings[user_id] !== newPings[user_id]) {
+                                    userPingUsernameChange = true;
+                                    break;
+                                }
+                            }
+                            if (userPingUsernameChange) insertFlashMessage("Don't get confused by the username change by the pinged user(s)", "Info");
+                            success(saveComment(comment));
+                            applytimeagoStyling();
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                },
+                deleteComment: function (data, success) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `/comments/${data.id}/delete`,
+                        success: function () {
+                            loadedComments.delete(data.id);
+                            success();
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                },
+                upvoteComment: function (data) {
+                    if (data.user_has_upvoted) {
+                        $.ajax({
+                            type: 'POST',
+                            url: `/comments/${data.id}/upvote`,
+                            error: function (data) {
+                                let json = data.responseJSON;
+                                if (json !== undefined) {
+                                    insertFlashMessage(json.message);
+                                } else {
+                                    insertFlashMessage("Something went wrong, sorry");
+                                }
+                            }
+                        });
+                    } else {
+                        $.ajax({
+                            type: 'DELETE',
+                            url: `/comments/${data.id}/downvote`,
+                            error: function (data) {
+                                let json = data.responseJSON;
+                                if (json !== undefined) {
+                                    insertFlashMessage(json.message);
+                                } else {
+                                    insertFlashMessage("Something went wrong, sorry");
+                                }
+                            }
+                        });
+                    }
+                },
+                hashtagClicked: function (hashtag) {
+                    window.open('https://www.google.com/search?q=' + hashtag);
+                }
+            });
+            $(".navigation-wrapper li").on('click', function () {
+                let commentList = $("ul#comment-list");
+                if ($(this).attr('data-sort-key') !== 'newest') $('.spinner').insertBefore(commentList.first());
+                else $('.spinner').insertAfter(commentList.last());
+            });
+        });
+    </script>
+{% endblock %}

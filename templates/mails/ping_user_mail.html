@@ -1,0 +1,15 @@
+{% extends "mails/vendor/layout_mail_alert.html" %}
+
+{% block title %}User Ping{% endblock %}
+
+{% block header %}User Ping{% endblock %}
+
+{% block content %}
+    <p>Hi {{ to_user }}.</p>
+    <p>You have been pinged by a user with the name of {{ from_user }} from the comment section of the
+    anime character <a href="{{ character_url }}" target="_blank" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box;color: #007bff; margin: 0;">{{ character.name }}</a>.
+    This is the comment {{ from_user }} posted/updated:</p>
+    <p style="white-space: pre-wrap; word-break: break-word;">"{{ comment_content }}"</p>
+{% endblock %}
+
+{% block unsubscribe %} - <a href="https://topanimecharacters.com/account?unsubscribe=yes" target="_blank" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;box-sizing: border-box; font-size: 12px; color: #999; text-decoration: underline;margin: 0;">Unsubscribe from user pings</a>{% endblock %}

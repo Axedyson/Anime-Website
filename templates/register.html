@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block content %}
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Sign Up</h5>
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {% if form.username.errors %}
+                    {{ form.username(class="form-control is-invalid", autocomplete="username", autofocus=True) }}
+                    <div class="invalid-feedback">{% for error in form.username.errors %}{{ error }}{% endfor %}</div>
+                {% else %}
+                    {{ form.username(class="form-control", autocomplete="username", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.profile_picture.label }}
+                <div class="d-block fileinput fileinput-new" data-provides="fileinput">
+                    <div id="preview-profile-picture" class="fileinput-preview fileinput-exists mb-2"></div>
+                    <div id="picture-selection-group">
+                        <div class="btn-group bg-white" role="group"
+                             aria-label="Select a new profile picture">
+                            <span class="btn btn-outline-{% if form.profile_picture.errors %}danger{% else %}secondary{% endif %} btn-file">
+                                <span class="fileinput-new">Select your profile picture</span>
+                                <span class="fileinput-exists">Change</span>
+                                {{ form.profile_picture }}
+                            </span>
+                        </div>
+                        <div class="btn-group bg-white" role="group"
+                            aria-label="Remove profile picture">
+                            <a href="#"
+                               class="btn btn-outline-{% if form.profile_picture.errors %}danger{% else %}secondary{% endif %}
+                                fileinput-exists" data-dismiss="fileinput">Remove</a>
+                        </div>
+                    </div>
+                </div>
+                {% if form.profile_picture.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.profile_picture.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text text-muted">{{ form.profile_picture.description }}</small>
+            </div>
+            <div class="form-group">
+                {{ form.email.label }}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.email(class="form-control") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {% if form.password.errors %}
+                    {{ form.password(class="form-control is-invalid", autocomplete="new-password") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.password.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.password(class="form-control", autocomplete="new-password") }}
+                {% endif %}
+                <small class="form-text text-muted">{{ form.password.description }}</small>
+            </div>
+            <div class="form-group">
+                {{ form.password2.label }}
+                {% if form.password2.errors %}
+                    {{ form.password2(class="form-control is-invalid", autocomplete="new-password") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.password2.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.password2(class="form-control", autocomplete="new-password") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    {% if form.agree.errors %}
+                        {{ form.agree(class="custom-control-input is-invalid") }}
+                    {% else %}
+                        {{ form.agree(class="custom-control-input") }}
+                    {% endif %}
+                    <label class="custom-control-label text-dark" for="agree">
+                        I have read and agree to the
+                        <a target="_blank" href="{{ url_for('users.cookies_policy') }}">Cookies Policy</a>,
+                        <a target="_blank" href="{{ url_for('users.privacy_policy') }}">Privacy Policy</a>, and
+                        <a target="_blank" href="{{ url_for('users.terms_of_use') }}">Terms Of Use</a>
+                    </label>
+                    {% if form.agree.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.agree.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                {{ form.recaptcha.label }}
+                {{ form.recaptcha }}
+                {% if form.recaptcha.errors %}
+                    <div class="invalid-feedback d-block">
+                        If you're not a robot, please verify it by passing this reCAPTCHA challenge
+                    </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    {{ form.remember_me(class="custom-control-input") }}
+                    {{ form.remember_me.label(class="custom-control-label") }}
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="btn-group bg-white" role="group" aria-label="Create new account">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Sign up</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+        <div class="row mb-5">
+            <div class="col-12">
+                <p class="font-italic">Already have an account?
+                    <a href="{{ url_for('users.login') }}">Log in here!</a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $form = $(" form");
+            let $timeInput = $("#time");
+            $form.on('submit', function () {
+                $timeInput.val(getCorrectLocalClientISOTime());
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "mails/vendor/layout_mail_alert.html" %}
+
+{% block title %}Account BANNED{% endblock %}
+
+{% block header %}Account BANNED{% endblock %}
+
+{% block content %}
+    <p>Hi {{ username }}.</p>
+    <p>
+        Your account on TopAnimeCharacters.com has been BANNED.
+        Because you received 5 strikes, which is the maximum amount of strikes
+        before getting banned.
+    </p>
+{% endblock %}

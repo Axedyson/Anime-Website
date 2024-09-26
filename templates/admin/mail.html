@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}Mail{% endblock %}
+
+{% block content %}
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Send Global Mail</h5>
+        <form method="POST" action="{{ url_for('admin.mail') }}" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.reason.label }}
+                {% if form.reason.errors %}
+                    {{ form.reason(class="form-control is-invalid", autofocus=True) }}
+                    <div class="invalid-feedback">
+                        {% for error in form.reason.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.reason(class="form-control", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.message.label }}
+                {% if form.message.errors %}
+                    {{ form.message(class="form-control is-invalid", rows="5") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.message.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.message(class="form-control", rows="5") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <div class="custom-file">
+                    {% if form.image_attachments.errors %}
+                        {{ form.image_attachments(class="custom-file-input is-invalid") }}
+                        {{ form.image_attachments.label(class="custom-file-label text-truncate") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.image_attachments.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.image_attachments(class="custom-file-input") }}
+                        {{ form.image_attachments.label(class="custom-file-label text-truncate") }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="btn-group bg-white" role="group" aria-label="Send message to us">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Send</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+    </div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $('.custom-file-input').on('change', function () {
+            let files = $(this)[0].files;
+            if (files.length) {
+                let filenames = [];
+                for (let i in files) {
+                    if (files.hasOwnProperty(i)) {
+                        filenames.push(files[i].name);
+                    }
+                }
+                $(this).next('.custom-file-label').html(filenames.join(', '));
+            } else {
+                $(this).next('.custom-file-label').html('Choose images...');
+            }
+        });
+    </script>
+{% endblock %}

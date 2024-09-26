@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}Bad Request{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <h1>400 Bad Request</h1>
+            <h3>Sorry, these things might be the reason why the page didn't render:</h3>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <ul class="list-group list-group-flush mt-3">
+                <li class="list-group-item bg-light">The server cannot or will not process due to a error sided with
+                    your request because of:
+                </li>
+                <li class="list-group-item bg-light">Malformed request syntax</li>
+                <li class="list-group-item bg-light">Size is to large</li>
+                <li class="list-group-item bg-light">Invalid request message framing</li>
+                <li class="list-group-item bg-light">Deceptive request routing</li>
+            </ul>
+        </div>
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top mt-4">
+{% endblock %}

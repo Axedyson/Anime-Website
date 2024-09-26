@@ -1,0 +1,287 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ search_category_toggle | title }} Search{% endblock %}
+
+{% block content %}
+    {% if not filter_search %}
+        {% if not errors %}
+            <div class="mb-4 px-3 py-2 text-center border rounded-lg bg-search text-truncate shadow-sm" data-placement="top" title="<p class='h6 mt-1 search-argument-tooltip'>{{ search_query_input.query }}</p>" 
+                data-toggle="tooltip">You searched for: <strong class="search-argument search-argument0"></strong></div>
+            {% if search_category_toggle == 'all' or search_category_toggle == 'characters' %}
+                {% if characters.count() %}
+                    <div class="card-deck justify-content-center align-items-center">
+                        {% for character in characters %}
+                            {% set global_rank = character.global_rating.get().global_rank %}
+                            {% set overall_score = character.global_rating.get().overall_score %}
+                            <div id="card" class="card mb-5 mx-3 shadow">
+                                <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                                   class="text-decoration-none text-reset">
+                                    <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                                        data-toggle="tooltip">{{ character.name }}</h5>
+                                    <img id="card-pic" class="card-img rounded-0"
+                                         src="{{ character.character_picture }}"
+                                         alt="character profile picture">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>GLOBAL RANK</strong>
+                                            <span data-placement="left" title="<p class='h6 mt-1'>{% if global_rank %}{{ global_rank }}{% else %}?{% endif %}</p>"
+                                                data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate">
+                                                {% if global_rank %}{{ global_rank }}{% else %}?{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Overall Rating
+                                            <span class="badge badge-success">
+                                                {% if overall_score %}{{ overall_score }}{% else %}?{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Official
+                                            <span class="float-right">
+                                                {% if character.official %}Yes{% else %}No{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Occupation
+                                            <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text" class="float-right text-truncate">
+                                                {{ character.occupation }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if more_data['characters'] %}
+                        <div class="row">
+                            <div class="col text-center">
+                                <div id="spinner" class="spinner-border mx-auto mb-3 characters-load-spinner" role="status"><span class="sr-only">Loading...</span></div>
+                                <button id="load-more-characters-button" class="btn btn-primary btn-sm" type="button">Load more characters</button>  
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p>No characters found sadly...</p>
+                {% endif %}
+            {% endif %}
+            {% if search_category_toggle == 'all' %}
+                <hr id="child-footer" class="border-secondary rounded-pill">
+            {% endif %}
+            {% if search_category_toggle == 'all' or search_category_toggle == 'universes' %}
+                {% if universe_name_rows %}
+                    {% for universe_name_row in universe_name_rows %}
+                        <div class="row mb-3 universe-row">
+                            {% for universe_name_cols in universe_name_row %}
+                                <div class="col-12 col-sm-6 col-xl-3">
+                                    <ul class="list-unstyled">
+                                        {% for universe_name in universe_name_cols %}
+                                            <li class="h6 text-break">
+                                                <a href="{{ url_for('characters.render_universe_characters', universe_name=universe_name) }}" title="{{ universe_name }}">{{ universe_name }}</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {% if more_data['universes'] %}
+                        <div class="row">
+                            <div class="col text-center">
+                                <div id="spinner" class="spinner-border mx-auto mb-3 universes-load-spinner" role="status"><span class="sr-only">Loading...</span></div>
+                                <button id="load-more-universes-button" class="btn btn-primary btn-sm" type="button">Load more universes</button>  
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p>No universes found sadly...</p>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="mb-4 px-3 py-2 text-center border border-danger rounded-lg bg-search text-truncate shadow-sm" data-placement="top" title="<p class='h6 mt-1 search-argument-tooltip'>{{ search_query_input.query }}</p>" data-toggle="tooltip">You searched for: <strong class="search-argument search-argument0"></strong></div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-12 col-xl-3 mb-5">
+                <div class="card shadow mx-auto" id="user-info-card">
+                    <div class="card-header">You searched for</div>
+                    <ul class="list-group list-group-flush">
+                        {% for k, v in search_query_input.items() %}
+                            <li class="list-group-item{% if k in errors %} list-group-item-danger{% endif %}">{{ k|capitalize }}{% if v %}<span data-placement="right" title="<p class='h6 mt-1 search-argument-tooltip'>{{ v }}</p>" data-toggle="tooltip" id="card-text" class="float-right text-truncate font-weight-bold search-argument search-argument{{ loop.index0 }}">{{ v }}</span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 col-xl-9">
+                {% if characters.count() %}
+                    <div class="card-deck justify-content-center align-items-center">
+                        {% for character in characters %}
+                            {% set global_rank = character.global_rating.get().global_rank %}
+                            {% set overall_score = character.global_rating.get().overall_score %}
+                            <div id="card" class="card mb-5 mx-3 shadow">
+                                <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}" class="text-decoration-none text-reset">
+                                    <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>" data-toggle="tooltip">{{ character.name }}</h5>
+                                    <img id="card-pic" class="card-img rounded-0" src="{{ character.character_picture }}" alt="character profile picture">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>GLOBAL RANK</strong>
+                                            <span data-placement="left" title="<p class='h6 mt-1'>{% if global_rank %}{{ global_rank }}{% else %}?{% endif %}</p>"
+                                                data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate">
+                                                {% if global_rank %}{{ global_rank }}{% else %}?{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Overall Rating
+                                            <span class="badge badge-success">
+                                                {% if overall_score %}{{ overall_score }}{% else %}?{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Official
+                                            <span class="float-right">
+                                                {% if character.official %}Yes{% else %}No{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Occupation
+                                            <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text" class="float-right text-truncate">
+                                                {{ character.occupation }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if more_data['characters'] %}
+                        <div class="row">
+                            <div class="col text-center">
+                                <div id="spinner" class="spinner-border mx-auto mb-3 characters-load-spinner" role="status"><span class="sr-only">Loading...</span></div>
+                                <button id="load-more-characters-button" class="btn btn-primary btn-sm" type="button">Load more characters</button>  
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="px-3 py-2 text-center border rounded-lg bg-search shadow-sm mx-5">No characters found sadly...</div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    <hr id="child-footer" class="border-primary rounded-top">
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            {% if (not filter_search and not errors and (search_category_toggle == 'all' or search_category_toggle == 'characters') or filter_search) and characters.count() and more_data['characters'] %}
+                let $loadMoreCharactersButton = $("#load-more-characters-button");
+                let $charactersSpinner = $(".characters-load-spinner");
+                let $cardDeck = $(".card-deck");
+
+                let charactersPage = 1;
+
+                $loadMoreCharactersButton.on('click', function () {
+                    $.ajax({
+                        type: 'GET',
+                        url: `{% if not filter_search %}{{ url_for('characters.ajax_character_search') }}?query={{ search_query_input.query }}&search_category_toggle={{ search_category_toggle }}&{% else %}{{ url_for('characters.ajax_character_filter_search') }}?{% for k, v in search_query_input.items() %}{{ k }}={{ v }}&{% endfor %}{% endif %}page=${charactersPage}`,
+                        success: function (data) {
+                            data.characters.forEach(function(character, i) {
+                                $cardDeck.append(`
+                                <div id="card" class="card mb-5 mx-3 shadow">
+                                    <a href="${character.url}" class="text-decoration-none text-reset">
+                                        <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>${character.name}</p>" data-toggle="tooltip">${character.name}</h5>
+                                        <img id="card-pic" class="card-img rounded-0" src="${character.picture}" alt="character profile picture">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <strong>GLOBAL RANK</strong>
+                                                <span data-placement="left" title="<p class='h6 mt-1'>${character.global_rank ? character.global_rank : "?"}</p>"
+                                                    data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate">
+                                                    ${character.global_rank ? character.global_rank : "?"}
+                                                </span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">Overall Rating
+                                                <span class="badge badge-success">${character.overall_score ? character.overall_score : "?"}</span>
+                                            </li>
+                                            <li class="list-group-item">Official<span class="float-right">${character.official ? "Yes" : "No"}</span></li>
+                                            <li class="list-group-item">Occupation
+                                                <span data-placement="bottom" title="<p class='h6 mt-1'>${character.occupation}</p>" data-toggle="tooltip" id="card-text" class="float-right text-truncate">${character.occupation}</span>
+                                            </li>
+                                        </ul>
+                                    </a>
+                                </div>`);
+                            });
+                            applyTooltipinItialization();
+                            if (!data.more_data) $loadMoreCharactersButton.css('display', 'none');
+                            else charactersPage++;
+                        },
+                        beforeSend: function () {
+                            $loadMoreCharactersButton.attr('disabled', true).html("Please wait...");
+                            $charactersSpinner.css('display', 'block');
+                        },
+                        complete: function () {
+                            $loadMoreCharactersButton.attr('disabled', false).html("Load more characters");
+                            $charactersSpinner.css('display', 'none');
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                });
+            {% endif %}
+            {% if not filter_search and not errors and (search_category_toggle == 'all' or search_category_toggle == 'universes') and universe_name_rows and more_data['universes'] %}
+                let $loadMoreUniversesButton = $("#load-more-universes-button");
+                let $universesSpinner = $(".universes-load-spinner");
+
+                let universePage = 1;
+
+                $loadMoreUniversesButton.on('click', function () {
+                    $.ajax({
+                        type: 'GET',
+                        url: `{{ url_for('characters.ajax_universe_search') }}?page=${universePage}&query={{ search_query_input.query }}&search_category_toggle={{ search_category_toggle }}`,
+                        success: function (data) {
+                            data.universes.forEach(function(universeRow) {
+                                $(`<div class="row mb-3 universe-row"></div>`).insertAfter($(".universe-row").last());
+                                universeRow.forEach(function(universeCol) {
+                                    $(".universe-row").last().append(`<div class="col-12 col-sm-6 col-xl-3 universe-col"><ul class="list-unstyled"></ul></div>`);
+                                    universeCol.forEach(function(universeName) {
+                                        $(".universe-row").last().children(".universe-col").last().children(".list-unstyled").append(`<li class="h6 text-break"><a href="/universes/${universeName}" title="${universeName}">${universeName}</a></li>`);
+                                    });
+                                });
+                            });
+                            if (!data.more_data) $loadMoreUniversesButton.css('display', 'none'); 
+                            else universePage++;
+                        },
+                        beforeSend: function () {
+                            $loadMoreUniversesButton.attr('disabled', true).html("Please wait...");
+                            $universesSpinner.css('display', 'block');
+                        },
+                        complete: function () {
+                            $loadMoreUniversesButton.attr('disabled', false).html("Load more universes");
+                            $universesSpinner.css('display', 'none');
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message);
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry");
+                            }
+                        }
+                    });
+                });
+            {% endif %}
+            // Have to do this since I'm minifying the html which doesn't preseve literal whitespace in the html code sadly :(
+            {% if not filter_search %}
+                $(".search-argument0").html("{{ search_query_input.query }}");
+            {% else %}
+                {% for v in search_query_input.values() %}
+                    $(".search-argument{{ loop.index0 }}").html("{{ v }}");
+                {% endfor %}
+            {% endif %}
+        });
+    </script>
+{% endblock %}

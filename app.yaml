@@ -1,0 +1,13 @@
+runtime: python37
+
+handlers:
+  - url: /static
+    static_dir: static
+
+  - url: /ads.txt
+    static_files: ads.txt
+    upload: ads.txt
+
+  - url: /.*
+    script: auto
+    secure: always

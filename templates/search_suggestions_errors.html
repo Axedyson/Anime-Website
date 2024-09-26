@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ search_category_toggle | title }} Search{% endblock %}
+
+{% block content %}
+    <div id="search-errors"></div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            $("#search-errors").html(insertStaticAlert("{{ error_message }}", "{{ category }}"));
+        });
+    </script>
+{% endblock %}

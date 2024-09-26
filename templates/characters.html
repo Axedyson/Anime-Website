@@ -1,0 +1,425 @@
+{% extends "layout.html" %}
+
+{% block title %}{% if universe %}{{ universe }}{% else %}Top Anime Characters{% endif %}{% endblock %}
+
+{% block lib_css %}
+    {% if characters.count() %}
+        <!-- Slim Select CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.23.0/slimselect.min.css" integrity="sha256-szifIT2PLputZG3FrdgWbQWzC9EE2orSuwgBxuzOmN0=" crossorigin="anonymous"/>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if characters.count() %}
+        <div class="modal fade" id="control-amount-modal" tabindex="-1" role="dialog"
+             aria-labelledby="control-amount-title"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="control-amount-title">Change displaying of characters</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="rangeInput">Change Amount of characters to display per page</label>
+                        <input id="rangeInput" class="custom-range" type="range"
+                               value="{{ pagination.per_page }}" min="1"
+                               max="50">
+                        <span id="amount-value" class="badge badge-secondary">{{ pagination.per_page }}</span>
+
+                        <a id="get" class="btn btn-outline-primary float-right btn-sm apply-changes disabled"
+                           href="
+                                   {% if request.endpoint == 'characters.render_characters' %}{% if category %}{{ url_for('characters.render_characters', category=category) }}{% else %}{{ url_for('characters.render_characters') }}{% endif %}{% else %}
+                                    {% if category %}{{ url_for('characters.render_universe_characters', universe_name=universe, category=category) }}{% else %}{{ url_for('characters.render_universe_characters', universe_name=universe) }}{% endif %}{% endif %}">Apply
+                            changes</a>
+                        <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="chart-modal" tabindex="-1" role="dialog" aria-labelledby="chart-title"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="chart-title">Chart over {% if universe %}the characters of <strong>{{ universe }}</strong>{% else %}all <strong>Official Characters</strong>{% endif %} by {% if category %}the category of <strong>{{ category }}</strong>{% else %}overall <strong>Performance</strong>{% endif %}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div id="chart-modal-body" class="modal-body">
+                        <div>
+                            <div style="min-width: {{ characters.count() * 82 }}px;">
+                                <canvas id="chart-canvas" aria-label="Chart over the characters" height="500" width="0" role="img"></canvas>
+                            </div>
+                        </div>
+                        <hr id="child-footer" class="border-primary rounded-top mb-0 mt-2">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid mb-4">
+            <div class="row bg-secondary py-2 rounded align-items-center justify-content-center">
+                <div class="col-11 col-md-5 col-lg-4 order-2 order-lg-1 mb-2 mb-md-0">
+                    <form id="category-form" method="POST" action="
+                            {% if request.endpoint == 'characters.render_characters' %}{{ url_for('characters.render_characters') }}{% else %}{{ url_for('characters.render_universe_characters', universe_name=universe) }}{% endif %}">
+                        {{ form.hidden_tag() }}
+                        <select name="{{ form.category.name }}" id="{{ form.category.id }}" required>
+                            {% for category_option in form.category.choices %}
+                                {% set currentCategory = category_option[0] %}
+                                <option value="{{ currentCategory }}"
+                                        {% if currentCategory == category %}selected{% endif %}>
+                                    {% if currentCategory %}{{ currentCategory }}{% else %}Top Anime
+                                        Characters{% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                <div class="col-11 col-lg-4 mt-2 mt-md-0 mb-2 mb-lg-0 badge badge-{% if universe %}primary{% else %}dark{% endif %} order-1 order-lg-2">
+                    <h3 id="do-not-clip-bottom-of-letters" class="font-weight-bold text-truncate mb-0"
+                        title="<p class='h4 mt-1'>
+                                {% if universe %}{{ universe }}{% else %}Official Characters{% endif %}</p>"
+                        data-placement="top" data-toggle="tooltip">
+                        {% if universe %}{{ universe }}{% else %}Official Characters{% endif %}</h3>
+                </div>
+                <div class="col-11 col-md-5 col-lg-4 order-3">
+                    {% if universe and current_user.is_authenticated and current_user.is_admin %}
+                        <div class="btn-toolbar float-md-right" role="toolbar"
+                             aria-label="Toolbar with buttons of the following action: View chart data of the characters, and edit the specific universe">
+                            <div class="btn-group bg-white rounded mr-2 mb-2 mb-md-0" role="group"
+                                 aria-label="View Chart of the characters of the universe">
+                                <button class="btn btn-labeled btn-outline-primary" type="button" data-toggle="modal"
+                                        data-target="#chart-modal">View Chart<span
+                                        class="btn-label btn-label-right"><i class="fas fa-chart-bar fa-lg"></i></span>
+                                </button>
+                            </div>
+                            <div class="btn-group bg-white rounded mb-2 mb-md-0" role="group"
+                                 aria-label="Edit the universe">
+                                <a id="get" class="btn btn-danger"
+                                   href="{{ url_for('admin.edit_universe', universe_name=universe) }}">Edit Universe</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="btn-group bg-white rounded mb-2 mb-md-0 float-md-right" role="group"
+                             aria-label="View Chart of all the characters">
+                            <button class="btn btn-labeled btn-outline-primary" type="button" data-toggle="modal"
+                                    data-target="#chart-modal">View Chart<span class="btn-label btn-label-right"><i
+                                    class="fas fa-chart-bar fa-lg"></i></span></button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-deck justify-content-center align-items-center">
+            {% for character in characters %}
+                <div id="card" class="card mb-5 mx-3 shadow">
+                    <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                       class="text-decoration-none text-reset">
+                        <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                            data-toggle="tooltip">{{ character.name }}</h5>
+                        <img id="card-pic" class="card-img rounded-0"
+                             src="{{ character.character_picture }}"
+                             alt="character profile picture">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>{% if universe %}{% if category %}UNIVERSE CATEGORY RANK{% else %}UNIVERSE RANK{% endif %}{% else %}{% if category %}GLOBAL CATEGORY RANK{% else %}GLOBAL RANK{% endif %}{% endif %}</strong> 
+                                <span data-placement="left" title="<p class='h6 mt-1'>{% if ratings[loop.index0][0] %}{{ ratings[loop.index0][0] }}{% else %}?{% endif %}</p>"
+                                    data-toggle="tooltip" id="number-statistic" class="badge badge-{% if universe %}primary{% else %}dark{% endif %} text-truncate">
+                                    {% if ratings[loop.index0][0] %}{{ ratings[loop.index0][0] }}{% else %}?{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {% if category %}Category Rating{% else %}Overall Rating{% endif %}
+                                <span class="badge badge-success">
+                                    {% if ratings[loop.index0][1] %}{{ ratings[loop.index0][1] }}{% else %}?{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                Official
+                                <span class="float-right">
+                                    {% if character.official %}Yes{% else %}No{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                Occupation
+                                <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text" class="float-right text-truncate">
+                                    {{ character.occupation }}
+                                </span>
+                            </li>
+                        </ul>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+        <div class="row">
+            <div class="col-12 col-sm-4 order-last order-sm-first mt-3 mt-sm-0 text-center text-sm-left">
+                <div class="btn-group bg-white" role="group"
+                     aria-label="Change amount of characters to display per page">
+                    <button type="button" class="btn btn-outline-primary"
+                            data-toggle="modal"
+                            data-target="#control-amount-modal"><i class="fas fa-sliders-h fa-lg"></i></button>
+                </div>
+            </div>
+            {% if pagination.links %}
+                <div class="col-12 col-sm-4">
+                    {{ pagination.links }}
+                </div>
+                <div class="col-12 col-xl-4 text-center text-xl-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% else %}
+                <div class="col-12 col-sm-8 text-center text-sm-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="row justify-content-center">
+            <div class="col-8">
+                <h1 class="text-center text-break">No characters found on the
+                    {{ pagination.page }}{% if pagination.page == 1 %}st
+                    {% elif pagination.page == 2 %}nd{% elif pagination.page == 3 %}rd{% else %}th{% endif %}
+                    page, unfortunately</h1>
+            </div>
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+    {% endif %}
+{% endblock %}
+
+{% block lib_js %}
+    {% if characters.count() %}
+        <!-- Slim Select JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.23.0/slimselect.min.js"
+                integrity="sha256-WvlDiM8q2Y7as4nE7vhzcEUZwwomBvDHV1w4R/+TCQY=" crossorigin="anonymous"></script>
+        <!-- Chart JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+                integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
+        <!-- Hammer JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
+                integrity="sha256-eVNjHw5UeU0jUqPPpZHAkU1z4U+QFBBY488WvueTm88=" crossorigin="anonymous"></script>
+        <!-- Chart plugin zoom JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/0.6.6/chartjs-plugin-zoom.min.js"
+                integrity="sha256-DKOZ2rbrIXMnmRHUaJivxX83UX3OhzCs5mtJqOTM3vs=" crossorigin="anonymous"></script>
+    {% endif %}
+{% endblock %}
+
+{% block code_js %}
+    {% if characters.count() %}
+        <script>
+            $(function () {
+                let $controlAmountModal = $("#control-amount-modal");
+                let $amountOfCharacters = $("#amount-value");
+                let $changeAmountRange = $("#rangeInput");
+                let $categoryForm = $("#category-form");
+                let $applyChanges = $(".apply-changes");
+                let $chartCanvas = $("#chart-canvas");
+                let $categorySelect = $("#category");
+                let $chartModal = $("#chart-modal");
+
+                let previousAmountRangeVal = {{ pagination.per_page }};
+
+                $controlAmountModal.on('shown.bs.modal', function () {
+                    $changeAmountRange.trigger('focus');
+                });
+                $changeAmountRange.on('input', function () {
+                    if (parseInt($changeAmountRange.val()) === previousAmountRangeVal) {
+                        $applyChanges.addClass('disabled');
+                    } else {
+                        $applyChanges.removeClass('disabled');
+                    }
+                    $amountOfCharacters.html($changeAmountRange.val());
+                });
+                $applyChanges.on('click', function () {
+                    $changeAmountRange.off('input');
+                    Cookies.set('per_page', $changeAmountRange.val(), {expires: 365});
+                });
+                let select = new SlimSelect({
+                    select: '#category',
+                    hideSelectedOption: true,
+                    searchText: "No category found",
+                    searchFocus: false,
+                    searchHighlight: true,
+                    showOptionTooltips: true
+                });
+                $categorySelect.on('change', function () {
+                    $categoryForm.submit();
+                    select.disable();
+                });
+
+                let chart;
+
+                let labels = [{% for character in characters %}{% if ratings[loop.index0][1] %}"{{ character.name }}"{{ ',' }}{% endif %}{% endfor %}];
+                let ranks = [{% for rating in ratings %}{% if rating[0] %}{{ rating[0] }}{{ ',' }}{% endif %}{% endfor %}];
+                let ratings = [{% for rating in ratings %}{% if rating[1] %}{{ rating[1] | replace(",", "") | int }}{{ ',' }}{% endif %}{% endfor %}];
+                let pictures = [{% for character in characters %}{% if ratings[loop.index0][1] %}"{{ character.character_picture }}"{{ ',' }}{% endif %}{% endfor %}];
+
+                let backgroundColors = [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ];
+                let borderColor = [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ];
+
+                $chartModal.on('shown.bs.modal', function () {
+                    let randomIndex = Math.floor(Math.random() * borderColor.length);
+                    chart = new Chart($chartCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: ratings,
+                                backgroundColor: backgroundColors[randomIndex],
+                                borderColor: borderColor[randomIndex],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                xAxes: [{
+                                    ticks: {
+                                        fontSize: 16,
+                                        fontStyle: 'bold'
+                                    },
+                                    gridLines: {
+                                        lineWidth: 0
+                                    }
+                                }],
+                                yAxes: [{
+                                    ticks: {
+                                        min: 0,
+                                        max: 100000,
+                                        callback: function(label, index, labels) {
+                                            return Math.round(label).toLocaleString("en-US");
+                                        }
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            // All of this is written in JavaScript because it works instead of the jquery variant for some odd reason...
+                            tooltips: {
+                                mode: 'index',
+                                position: 'cursor',
+                                enabled: false,
+                                custom: function (tooltipModel) {
+                                    // Tooltip Element
+                                    let tooltipEl = document.getElementById('chart-js-tooltip');
+
+                                    // Create element on first render
+                                    if (!tooltipEl) {
+                                        tooltipEl = document.createElement('div');
+                                        tooltipEl.id = 'chart-js-tooltip';
+                                        document.body.appendChild(tooltipEl);
+                                    }
+
+                                    // Hide if no tooltip
+                                    if (tooltipModel.opacity === 0) {
+                                        tooltipEl.style.opacity = 0;
+                                        return;
+                                    }
+
+                                    // Set caret Position
+                                    tooltipEl.classList.remove('above', 'below', 'no-transform');
+                                    if (tooltipModel.yAlign) {
+                                        tooltipEl.classList.add(tooltipModel.yAlign);
+                                    } else {
+                                        tooltipEl.classList.add('no-transform');
+                                    }
+
+                                    let i = tooltipModel.dataPoints[0].index;
+                                    tooltipEl.innerHTML =
+                                        `<table>
+                                            <tr>
+                                                <td><img id="tooltip-character-picture" src="${pictures[i]}"></td>
+                                            </tr>
+                                            <tr>
+                                                <td id="tooltip-character-name" class="text-truncate"><strong>${labels[i]}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="bg-success">${ratings[i].toLocaleString("en-US")}</td>
+                                            </tr>
+                                            <tr>
+                                                <td id="tooltip-character-rank" class="bg-{% if universe %}primary{% else %}dark{% endif %} text-truncate">${ranks[i]}</td>
+                                            </tr>
+                                         </table>`;
+
+                                    let position = this._chart.canvas.getBoundingClientRect();
+
+                                    // Display, position, and set styles for the tooltip
+                                    tooltipEl.style.zIndex = 1051;
+                                    tooltipEl.style.opacity = 1;
+                                    tooltipEl.style.background = "rgba(0, 0, 0, .6)";
+                                    tooltipEl.style.color = "white";
+                                    tooltipEl.style.position = 'absolute';
+                                    tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+                                    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
+                                    tooltipEl.style.fontFamily = tooltipModel._bodyFontFamily;
+                                    tooltipEl.style.fontSize = tooltipModel.bodyFontSize + 'px';
+                                    tooltipEl.style.fontStyle = tooltipModel._bodyFontStyle;
+                                    tooltipEl.style.padding = tooltipModel.yPadding + 'px ' + tooltipModel.xPadding + 'px';
+                                    tooltipEl.style.pointerEvents = 'none';
+                                    tooltipEl.style.borderRadius = "4px";
+                                    tooltipEl.style.transition = "all .2s ease";
+                                    tooltipEl.style.transform = "translate(-50%, 0)";
+
+                                    readjustTooltip(tooltipEl);
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'y',
+                                rangeMin: {
+                                    y: 0
+                                },
+                                rangeMax: {
+                                    y: 100000
+                                }
+                            },
+                            zoom: {
+                                enabled: true,
+                                mode: 'y',
+                                rangeMin: {
+                                    y: 0
+                                },
+                                rangeMax: {
+                                    y: 100000
+                                }
+                            }
+                        }
+                    });
+                });
+                $chartModal.on('hide.bs.modal', function () {
+                    let $tooltipEl = $("#chart-js-tooltip");
+                    // Make sure that the tooltip is hidden at all cost when the user closes the modal!
+                    if ($tooltipEl) {
+                        $tooltipEl.css('opacity', 0);
+                    }
+                    chart.destroy();
+                });
+                Chart.Tooltip.positioners.cursor = function (chartElements, coordinates) {
+                    return coordinates;
+                };
+                function readjustTooltip(tooltipEl) {
+                    // Reduce the amount of pixels that the tooltip is to the left, by the amount of pixels of the tooltip that is hidden.
+                    if (parseInt(tooltipEl.style.left) + 114 > $(window).width()) {
+                        tooltipEl.style.left = $(window).width() - 114 + 'px';
+                    }
+                }
+            });
+        </script>
+    {% endif %}
+{% endblock %}

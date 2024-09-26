@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Login</h5>
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.email.label }}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control is-invalid", autocomplete="email", autofocus=True) }}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.email(class="form-control", autocomplete="email", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {% if form.password.errors %}
+                    {{ form.password(class="form-control is-invalid", autocomplete="current-password") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.password.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.password(class="form-control", autocomplete="current-password") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    {{ form.remember_me(class="custom-control-input") }}
+                    {{ form.remember_me.label(class="custom-control-label") }}
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12 col-sm-5 order-last order-sm-first">
+                    <div class="btn-group bg-white" role="group" aria-label="Log in to your account">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Log in</button>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-7 mb-4 mb-sm-0">
+                    <a class="float-sm-right" href="{{ url_for('users.reset_password') }}">Forgot your password?</a>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+        <div class="row mb-5">
+            <div class="col-12">
+                <p class="font-italic">Don't have an account?
+                    <a href="{{ url_for('users.register') }}">Sign up here!</a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $form = $(" form");
+            let $timeInput = $("#time");
+            $form.on('submit', function () {
+                $timeInput.val(getCorrectLocalClientISOTime());
+            });
+        });
+    </script>
+{% endblock %}

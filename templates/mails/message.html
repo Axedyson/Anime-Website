@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>User Messages - TopAnimeCharacters.com</title>
+</head>
+<body>
+    <p>Name: {{ username }}</p>
+    <img style="min-width: 165px; max-width: 165px; min-height: 165px; max-height: 165px; object-fit: cover;" src="{{ profile_picture }}" alt="profile picture">
+    <p>Email: {{ email }}</p>
+    <p>Logged in: <strong>{% if account %}Yes{% else %}No{% endif %}</strong></p>
+    <p style="white-space: pre-wrap; word-break: break-word;">{{ message }}</p>
+</body>
+</html>

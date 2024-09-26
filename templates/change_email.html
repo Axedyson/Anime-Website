@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Email Change{% endblock %}
+
+{% block content %}
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Email Change</h5>
+        <form method="POST" action="{{ url_for('users.change_email') }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.email.label }}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control is-invalid", autocomplete="email", autofocus=True) }}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.email(class="form-control", autocomplete="email", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.current_password.label }}
+                {% if form.current_password.errors %}
+                    {{ form.current_password(class="form-control is-invalid", autocomplete="current-password") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.current_password.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.current_password(class="form-control", autocomplete="current-password") }}
+                {% endif %}
+            </div>
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="btn-group bg-white" role="group" aria-label="Change your email">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+    </div>
+{% endblock %}

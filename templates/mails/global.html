@@ -1,0 +1,14 @@
+{% extends "mails/vendor/layout_mail_alert.html" %}
+
+{% block title %}News Letters{% endblock %}
+
+{% block header %}{{ reason }}{% endblock %}
+
+{% block content %}
+    <p>Hi {{ username }}.</p>
+    <p style="white-space: pre-wrap; word-break: break-word;">{{ message }}</p>
+{% endblock %}
+
+{% block unsubscribe %} - <a href="https://topanimecharacters.com/account?unsubscribe=yes" target="_blank" style="font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+                          box-sizing: border-box; font-size: 12px; color: #999; text-decoration: underline;
+                          margin: 0;">Unsubscribe from news letters</a>{% endblock %}

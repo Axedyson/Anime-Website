@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Universe - {{ universe }}{% endblock %}
+
+{% block content %}
+    <div class="modal fade" id="universe-delete-modal" tabindex="-1" role="dialog"
+         aria-labelledby="danger-deletion-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="danger-deletion-title">Danger!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    NOTE: WHEN DELETING A UNIVERSE, ALL CHARACTERS ASSOCIATED WITH THAT UNIVERSE WILL ALSO GET
+                    DELETED!!!
+                    DELETING A UNIVERSE CAN BE A LONG PROCESS, YOU WILL PROBABLY HAVE TO WAIT A BIT BEFORE CONTINUING,
+                    SORRY.
+                    Do you really want to delete this universe, think how sad some people will become of this.
+                    This cannot be undone! :(
+                </div>
+                <div class="modal-footer">
+                    <a id="action"
+                       href="{{ url_for('admin.delete_universe', universe_name=universe) }}"
+                       class="btn btn-outline-danger"><b>DELETE UNIVERSE</b></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Universe Editing</h5>
+        <form method="POST" action="{{ url_for('admin.edit_universe', universe_name=universe) }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.universe.label }}
+                {% if form.universe.errors %}
+                    {{ form.universe(class="form-control is-invalid", autofocus=True) }}
+                    <div class="invalid-feedback">
+                        {% for error in form.universe.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.universe(class="form-control", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="form-group" id="add-category-field">
+                {{ form.categories.label(class="d-block") }}
+                <div class="btn-group bg-white" role="group" aria-label="Add a category">
+                    <button id="add-category-button" type="button"
+                            class="btn btn-outline-{% if extra_errors %}danger{% else %}secondary{% endif %}"
+                            {% if form.categories|length == form.categories.max_entries %} disabled{% endif %}>
+                        <i class="fas fa-plus"></i></button>
+                </div>
+                {% if extra_errors %}
+                    <div class="invalid-feedback d-block">{{ extra_errors }}</div>
+                {% endif %}
+            </div>
+            {% for category_form in form.categories|reverse %}
+                <div class='form-group'>
+                {{ category_form.category_id() }}
+                    <div class='input-group'>
+                        {% if category_form.category.errors %}
+                            {{ category_form.category(class="form-control is-invalid") }}
+                            <div class='input-group-append bg-white'>
+                                <button id='remove-category-button' type='button'
+                                        class='btn btn-outline-secondary rounded-right'
+                                        {% if form.categories|length == 1 %} disabled{% endif %}>
+                                    <i class='fas fa-minus'></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                {% for error in category_form.category.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ category_form.category(class="form-control") }}
+                            <div class='input-group-append bg-white rounded-right'>
+                                <button id='remove-category-button' type='button'
+                                        class='btn btn-outline-secondary'{% if form.categories|length == 1 %}
+                                        disabled{% endif %}>
+                                    <i class='fas fa-minus'></i>
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-4">
+                <div class="col-12 col-sm-6 order-last order-sm-first">
+                    <div class="btn-group bg-white" role="group" aria-label="Update the universe">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Update universe</button>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+                    <div class="btn-group bg-white float-sm-right" role="group"
+                         aria-label="Delete the universe">
+                        <button type="button" class="btn btn-outline-danger"
+                                data-toggle="modal"
+                                data-target="#universe-delete-modal">
+                            Delete universe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+    </div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $addCategoryButton = $("#add-category-button");
+
+            let numberOfCategoryInputFields = {{ form.categories|length }};
+            let i = {{ form.categories|length }};
+
+            $addCategoryButton.on('click', function () {
+                $(`<div class='form-group'>
+                        <div class='input-group'>
+                            <input class='form-control' id='categories-${i}-category' name='categories-${i}-category' required type='text' value/>
+                            <div class='input-group-append bg-white'>
+                                <button id='remove-category-button' type='button' class='btn btn-outline-secondary rounded-right'>
+                                    <i class='fas fa-minus'></i>
+                                </button>
+                            </div>
+                        </div>
+                   </div>`).insertAfter($("#add-category-field"));
+                numberOfCategoryInputFields++;
+                i++;
+                if (numberOfCategoryInputFields === {{ form.categories.max_entries }}) {
+                    $addCategoryButton.attr('disabled', true);
+                }
+                $("form #remove-category-button").attr('disabled', false);
+            });
+            $("form").on("click", "#remove-category-button", function () {
+                let $inputField = $(this).closest(".input-group").find("input");
+                let $invalidFeedbackDiv = $(this).closest(".input-group").find(".invalid-feedback");
+                let $hiddenInputField = $(this).closest(".form-group").find("input[type='hidden']");
+                if ($inputField.val() && $hiddenInputField.val()) {
+                    if ($invalidFeedbackDiv.length) {
+                        insertFlashMessage("If you update the character now, all votes from other users of that specific category that you just deleted on this universe will get deleted!!!", "danger");
+                    } else {
+                        insertFlashMessage("If you update the character now, all votes from other users of the category " + $inputField.val() + " on this universe will get deleted!!!", "danger");
+                    }
+                }
+                numberOfCategoryInputFields--;
+                $(this).closest(".form-group").remove();
+                if (numberOfCategoryInputFields === 1) {
+                    $("form #remove-category-button").attr('disabled', true);
+                }
+                $addCategoryButton.attr('disabled', false);
+            });
+        });
+    </script>
+{% endblock %}

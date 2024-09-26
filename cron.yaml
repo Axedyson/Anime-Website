@@ -1,0 +1,3 @@
+cron:
+  - url: /cron/characters/update_ratings
+    schedule: every 1 hours

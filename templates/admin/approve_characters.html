@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block title %}Approve Characters{% endblock %}
+
+{% block content %}
+    {% if characters.count() %}
+        <div class="modal fade" id="control-amount-modal" tabindex="-1" role="dialog"
+             aria-labelledby="control-amount-title"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="control-amount-title">Change displaying of submitted characters</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="rangeInput">Change Amount of submitted characters to display per page</label>
+                        <input id="rangeInput" class="custom-range" type="range"
+                               value="{{ pagination.per_page }}" min="1"
+                               max="50">
+                        <span id="amount-value" class="badge badge-secondary">{{ pagination.per_page }}</span>
+                        <a id="get" class="btn btn-outline-primary float-right btn-sm apply-changes disabled"
+                           href="{{ url_for('admin.approve_characters') }}">
+                            Apply changes</a>
+                        <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-deck justify-content-center align-items-center">
+            {% for character in characters %}
+                <div id="card" class="card mb-5 mx-3 shadow">
+                    <a href="{{ url_for('admin.approve_character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER_TEMP)) }}"
+                       class="text-decoration-none text-reset">
+                        <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                            data-toggle="tooltip">{{ character.name }}</h5>
+                        <img id="card-pic" class="card-img rounded-0"
+                             src="{{ character.character_picture }}"
+                             alt="character profile picture">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Nr.
+                                <span class="badge badge-dark">
+                                    {{ loop.index + pagination.per_page * (pagination.page - 1) }}
+                                </span>
+                            </li>
+                            <li class="list-group-item">Official<span
+                                    class="float-right">{% if character.official %}Yes{% else %}No{% endif %}</span>
+                            </li>
+                        </ul>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+        <div class="row">
+            <div class="col-12 col-sm-4 order-last order-sm-first mt-3 mt-sm-0 text-center text-sm-left">
+                <div class="btn-group bg-white" role="group"
+                     aria-label="Change amount of submitted characters to display per page">
+                    <button type="button" class="btn btn-outline-primary"
+                            data-toggle="modal"
+                            data-target="#control-amount-modal"><i class="fas fa-sliders-h fa-lg"></i></button>
+                </div>
+            </div>
+            {% if pagination.links %}
+                <div class="col-12 col-sm-4">
+                    {{ pagination.links }}
+                </div>
+                <div class="col-12 col-xl-4 text-center text-xl-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% else %}
+                <div class="col-12 col-sm-8 text-center text-sm-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="row justify-content-center">
+            <div class="col-9">
+                <h1 class="text-center text-break">No submitted characters found on the
+                    {{ pagination.page }}{% if pagination.page == 1 %}st
+                    {% elif pagination.page == 2 %}nd{% elif pagination.page == 3 %}rd{% else %}th{% endif %}
+                    page</h1>
+            </div>
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+    {% endif %}
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $changeAmountRange = $("#rangeInput");
+            let $amountOfCharacters = $("#amount-value");
+            let $controlAmountModal = $("#control-amount-modal");
+            let $applyChanges = $(".apply-changes");
+
+            let previousAmountRangeVal = {{ pagination.per_page }};
+
+            $controlAmountModal.on('shown.bs.modal', function () {
+                $changeAmountRange.trigger('focus');
+            });
+            $changeAmountRange.on('input', function () {
+                if (parseInt($changeAmountRange.val()) === previousAmountRangeVal) {
+                    $applyChanges.addClass('disabled');
+                } else {
+                    $applyChanges.removeClass('disabled');
+                }
+                $amountOfCharacters.html($changeAmountRange.val());
+            });
+            $applyChanges.on('click', function () {
+                $changeAmountRange.off('input');
+                Cookies.set('approve_characters_per_page', $changeAmountRange.val(), {expires: 365, path: '/admin/characters'});
+            });
+        });
+    </script>
+{% endblock %}

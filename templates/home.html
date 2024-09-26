@@ -1,0 +1,284 @@
+{% extends "layout.html" %}
+
+{% block main_title %}TopAnimeCharacters.com - Home{% endblock %}
+
+{% block lib_css %}
+    <!-- Slick-carousel CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.css" integrity="sha256-UK1EiopXIL+KVhfbFa8xrmAWPeBjMVdvYMYkTAEv/HI=" crossorigin="anonymous" />
+    <!-- Slick-carousel theme CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.min.css" integrity="sha256-4hqlsNP9KM6+2eA8VUT0kk4RsMRTeS7QGHIM+MZ5sLY=" crossorigin="anonymous" />
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron py-3 mb-3 shadow-sm">
+        <h1 class="text-break">Welcome to TopAnimeCharacters.com</h1>
+        <hr class="my-2">
+        <h5>Join the online community, create your anime and manga characters, explore the comment sections, and rate anime characters!</h5>
+    </div>
+    {% if characters_and_universes_available %}
+        <div class="row">
+            <div class="col-12 col-xl-9">
+                <p class="mb-2 font-weight-bold text-center">The most voted (thus most popular) characters</p>
+                <div class="most-voted-characters">
+                    {% for character in most_voted_characters %}
+                        {% set global_rank = character.global_rating.get().global_rank %}
+                        {% set overall_score = character.global_rating.get().overall_score %}
+                        <div id="card" class="card mx-3 mb-4 shadow slick-card">
+                            <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                               class="text-decoration-none text-reset">
+                                <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                                    data-toggle="tooltip">{{ character.name }}</h5>
+                                <img id="card-pic" class="card-img slick-card-img rounded-0"
+                                     src="{{ character.character_picture }}"
+                                     alt="character profile picture">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>POPULARITY RANK</strong>
+                                        <span class="badge badge-secondary">
+                                            {{ loop.index }}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>GLOBAL RANK</strong>
+                                        <span data-placement="left" title="<p class='h6 mt-1'>{% if global_rank %}{{ global_rank }}{% else %}?{% endif %}</p>"
+                                            data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate slick-card-rating">
+                                            {% if global_rank %}{{ global_rank }}{% else %}?{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Overall Rating
+                                        <span class="badge badge-success">
+                                            {% if overall_score %}{{ overall_score }}{% else %}?{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        Official
+                                        <span class="float-right">
+                                            {% if character.official %}Yes{% else %}No{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        Occupation
+                                        <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text"
+                                            class="float-right text-truncate slick-card-occupation">
+                                            {{ character.occupation }}
+                                        </span>
+                                    </li>
+                                </ul>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3 mb-2">
+                <p class="mb-2 font-weight-bold">Universes with the most characters</p>
+                <div class="card shadow-sm px-3 pt-3 pb-2">
+                    <ul class="list-unstyled mb-0">
+                        {% for universe_name in most_characters_universes %}
+                            <li class="h6 text-break">
+                                <span class="badge badge-pill badge-secondary">{{ loop.index }}</span>
+                                <a href="{{ url_for('characters.render_universe_characters', universe_name=universe_name) }}" title="{{ universe_name }}">{{ universe_name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3 order-3 order-xl-4 mb-2">
+                <p class="mb-2 font-weight-bold">Recently added universes</p>
+                <div class="card shadow-sm px-3 pt-3 pb-2">
+                    <ul class="list-unstyled mb-0">
+                        {% for universe_name in recent_universes %}
+                            <li class="h6 text-break">
+                                <span class="badge badge-pill badge-secondary">{{ loop.index }}</span>
+                                <a href="{{ url_for('characters.render_universe_characters', universe_name=universe_name) }}" title="{{ universe_name }}">{{ universe_name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 col-xl-9 order-4 order-xl-3">
+                <p class="mb-2 font-weight-bold text-center">Recently added characters</p>
+                <div class="recent-characters">
+                    {% for character in recent_characters %}
+                        {% set global_rank = character.global_rating.get().global_rank %}
+                        {% set overall_score = character.global_rating.get().overall_score %}
+                        <div id="card" class="card mx-3 mb-4 shadow slick-card">
+                            <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                               class="text-decoration-none text-reset">
+                                <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                                    data-toggle="tooltip">{{ character.name }}</h5>
+                                <img id="card-pic" class="card-img slick-card-img rounded-0"
+                                     src="{{ character.character_picture }}"
+                                     alt="character profile picture">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>RECENCY RANK</strong>
+                                        <span class="badge badge-secondary">
+                                            {{ loop.index }}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>GLOBAL RANK</strong>
+                                        <span data-placement="left" title="<p class='h6 mt-1'>{% if global_rank %}{{ global_rank }}{% else %}?{% endif %}</p>"
+                                            data-toggle="tooltip" id="number-statistic" class="badge badge-dark text-truncate slick-card-rating">
+                                            {% if global_rank %}{{ global_rank }}{% else %}?{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Overall Rating
+                                        <span class="badge badge-success">
+                                            {% if overall_score %}{{ overall_score }}{% else %}?{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        Official
+                                        <span class="float-right">
+                                            {% if character.official %}Yes{% else %}No{% endif %}
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        Occupation
+                                        <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text"
+                                            class="float-right text-truncate slick-card-occupation">
+                                            {{ character.occupation }}
+                                        </span>
+                                    </li>
+                                </ul>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% if top_unofficial_characters.count() %}
+            <div class="row">
+                <div class="col">
+                    <p class="mb-2 font-weight-bold text-center">Top unofficial characters</p>
+                    <div class="top-unofficial-characters">
+                        {% for character in top_unofficial_characters %}
+                            {% set overall_score = character.global_rating.get().overall_score %}
+                            <div id="card" class="card mx-3 mb-4 shadow slick-card">
+                                <a href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                                   class="text-decoration-none text-reset">
+                                    <h5 class="card-header text-truncate" title="<p class='h5 mt-1'>{{ character.name }}</p>"
+                                        data-toggle="tooltip">{{ character.name }}</h5>
+                                    <img id="card-pic" class="card-img slick-card-img rounded-0"
+                                         src="{{ character.character_picture }}"
+                                         alt="character profile picture">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>TOP UNOFFICIAL RANK</strong>
+                                            <span class="badge badge-secondary">
+                                                {{ loop.index }}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Overall Rating
+                                            <span class="badge badge-success">
+                                                {% if overall_score %}{{ overall_score }}{% else %}?{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Official
+                                            <span class="float-right">
+                                                {% if character.official %}Yes{% else %}No{% endif %}
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            Occupation
+                                            <span data-placement="bottom" title="<p class='h6 mt-1'>{{ character.occupation }}</p>" data-toggle="tooltip" id="card-text"
+                                                class="float-right text-truncate slick-card-occupation">
+                                                {{ character.occupation }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row justify-content-center">
+            <div class="col-8">
+                <h1 class="text-center text-break">No characters found unfortunately, please add some would ya!!!</h1>
+            </div>
+        </div>
+    {% endif %}
+    <hr id="child-footer" class="border-primary rounded-top">
+{% endblock %}
+
+{% block lib_js %}
+    <!-- Slick-carousel JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js" integrity="sha256-NXRS8qVcmZ3dOv3LziwznUHPegFhPZ1F/4inU7uC8h0=" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block code_js %}
+    {% if session['email_confirmation'] or characters_and_universes_available %}
+        <script>
+            $(function () {
+                {% if session['email_confirmation'] %}
+                    $.ajax({
+                        type: 'POST',
+                        dataType: "json",
+                        contentType: "application/json",
+                        url: '{{ url_for('users.confirm_email_final') }}',
+                        data: JSON.stringify(getCorrectLocalClientISOTime()),
+                        success: function (data) {
+                            insertFlashMessage(data.message, 'Success');
+                        },
+                        error: function (data) {
+                            let json = data.responseJSON;
+                            if (json !== undefined) {
+                                insertFlashMessage(json.message, 'Danger');
+                            } else {
+                                insertFlashMessage("Something went wrong, sorry", 'Danger');
+                            }
+                        }
+                    });
+                {% endif %}
+                {% if characters_and_universes_available %}
+                    // Gotta have this function because the slick js plugin removes all the ids on the items (character cards) inside the slick container, weird :/
+                    function attachProperCardIdsToAllCardElements() {
+                        $(".slick-card").attr('id', 'card');
+                        $(".slick-card-img").attr('id', 'card-pic');
+                        $(".slick-card-rating").attr('id', 'number-statistic');
+                        $(".slick-card-occupation").attr('id', 'card-text');
+                    }
+                    function hideTooltips() {
+                        $("[data-toggle='tooltip']").tooltip('hide');
+                    }
+                    // Whenever the window resizes i need to call this method, because for some reason the slick js plugin remove the ids when resizing :/
+                    $(window).on('resize', function(){
+                        attachProperCardIdsToAllCardElements();
+                        hideTooltips();
+                    });
+
+                    function createSlickCharacters(jquerySelector) {
+                        jquerySelector.slick({
+                            touchThreshold: 10,
+                            autoplay: true,
+                            autoplaySpeed: 4000,
+                            mobileFirst: true,
+                            variableWidth: true,
+                            centerMode: true,
+                            dots: true,
+                            arrows: false
+                        });
+                        attachProperCardIdsToAllCardElements();
+                        jquerySelector.on('swipe', function(event, slick, direction) {
+                            attachProperCardIdsToAllCardElements();
+                            hideTooltips();
+                        });
+                    }
+                    createSlickCharacters($(".most-voted-characters"));
+                    createSlickCharacters($(".recent-characters"));
+                    {% if top_unofficial_characters.count() %}
+                        createSlickCharacters($(".top-unofficial-characters"));
+                    {% endif %}
+                {% endif %}
+            });
+        </script>
+    {% endif %}
+{% endblock %}

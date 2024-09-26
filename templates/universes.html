@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}Universes{% endblock %}
+
+{% block content %}
+    <div id="universe-content">
+        {% if universes_alp or universes_not_alp %}
+            <ul class="nav nav-pills justify-content-center" role="tablist">
+                {% if universes_not_alp %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if not universes_alp %} active{% endif %}" id="hash-tab" data-toggle="pill" href="#hash" role="tab"
+                        aria-controls="hash" aria-selected="{% if not universes_alp %}true{% else %}false{% endif %}">#</a>
+                    </li>
+                {% endif  %}
+                {% for letter in universes_alp %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if loop.index0 == 0 %} active{% endif %}" id="{{ letter }}-tab" data-toggle="pill" href="#{{ letter }}" role="tab"
+                           aria-controls="{{ letter }}" aria-selected="{% if loop.index0 == 0 %}true{% else %}false{% endif %}">{{ letter }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <hr id="child-footer" class="border-secondary rounded-pill">
+            <div class="tab-content">
+                {% if universes_not_alp %}
+                    <div class="tab-pane fade{% if not universes_alp %} show active{% endif %}" id="hash" role="tabpanel" aria-labelledby="hash-tab">
+                        {% for universes in universes_not_alp %}
+                            <div class="row mb-3">
+                                {% for universe in universes %}
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <ul class="list-unstyled">
+                                            {% for universe_name in universe %}
+                                                <li class="h6 text-break">
+                                                    <a href="{{ url_for('characters.render_universe_characters', universe_name=universe_name) }}" title="{{ universe_name }}">{{ universe_name }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif  %}
+                {% for letter in universes_alp %}
+                    <div class="tab-pane fade{% if loop.index0 == 0 %} show active{% endif %}" id="{{ letter }}" role="tabpanel" aria-labelledby="{{ letter }}-tab">
+                        {% for universes in universes_alp[letter] %}
+                            <div class="row mb-3">
+                                {% for universe in universes %}
+                                    <div class="col-12 col-sm-6 col-xl-3">
+                                        <ul class="list-unstyled">
+                                            {% for universe_name in universe %}
+                                                <li class="h6 text-break">
+                                                    <a href="{{ url_for('characters.render_universe_characters', universe_name=universe_name) }}" title="{{ universe_name }}">{{ universe_name }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-8">
+                    <h1 class="text-center text-break">No universes found unfortunately, that means that there are no characters actually. Please add some would ya! :D</h1>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top my-0">
+{% endblock %}

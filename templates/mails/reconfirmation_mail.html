@@ -1,0 +1,19 @@
+{% extends "mails/vendor/layout_mail_action.html" %}
+
+{% block title %}Reconfirm Email{% endblock %}
+
+{% block header %}Hi {{ username }}.{% endblock %}
+
+{% block content %}
+    <p>Here is a new confirmation link down below.</p>
+    <p>
+        We need your confirmation to ensure that you are not a bot.
+        When you have confirmed your email address you will unlock every feature on this
+        website, well... except for admin features of course xD
+    </p>
+
+{% endblock %}
+
+{% block button_url %}{{ confirm_url }}{% endblock %}
+
+{% block button_text %}Reconfirm Email Address{% endblock %}

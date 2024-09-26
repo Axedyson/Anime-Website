@@ -1,0 +1,377 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit - {{ character.name }}{% endblock %}
+
+{% block content %}
+    <div class="modal fade" id="character-delete-modal" tabindex="-1" role="dialog"
+         aria-labelledby="danger-deletion-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="danger-deletion-title">Danger!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Do you really want to delete this character, think how sad some people will become of this.
+                    This cannot be undone!{% if character.user and not character.user.is_admin and not character.user.is_banned and not character.user_striked %}
+                    Remember, maybe you should also give the user a strike, if the character is very inappropriate.{% endif %} :(
+                </div>
+                <div class="modal-footer">
+                    <a id="action"
+                       href="{{ url_for('admin.delete_live_character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                       class="btn btn-outline-danger"><b>DELETE CHARACTER</b></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if character.user and not character.user.is_admin and not character.user.is_banned %}
+        <div class="modal fade" id="strike-user-modal{{ character.user.id }}" tabindex="-1" role="dialog" aria-labelledby="strike-user-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="strike-user-title">Strike User</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title text-truncate" data-placement="top" title="<p class='h5 mt-1'>{{ character.user.username }}</p>" data-toggle="tooltip">{{ character.user.username }}</h5>
+                    </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title">STRIKES <span class="badge badge-{% if character.user.strikes == 0 %}success{% else %}danger{% endif %} align-text-bottom">
+                        {{ character.user.strikes }}</span></h5>
+                    </div>
+                    <div class="modal-body">
+                        {% if not character.user_striked %}
+                            <a id="action" href="{{ url_for('admin.strike_user_by_live_character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER), user_id=character.user.id) }}"
+                                class="btn btn-outline-danger ml-1"><b>STRIKE USER</b></a>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-danger" disabled>User already striked</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-xl-6 col-12 order-last order-xl-first">
+            <div id="form-container" class="mx-auto">
+                <h5 class="display-4 text-center mb-5">Character Editing</h5>
+                <form method="POST"
+                      action="{{ url_for('admin.edit_character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}"
+                      enctype="multipart/form-data" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.name.label }}
+                        {% if form.name.errors %}
+                            {{ form.name(class="form-control is-invalid", autofocus=True) }}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.name(class="form-control", autofocus=True) }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.universe.label }}
+                        {% if form.universe.errors %}
+                            {{ form.universe(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.universe.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.universe(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.universe_action.label }}
+                        {% if form.universe_action.errors %}
+                            {{ form.universe_action(class="custom-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.universe_action.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.universe_action(class="custom-select") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group" id="add-category-field">
+                        {{ form.categories.label(class="d-block") }}
+                        <div class="btn-group bg-white" role="group" aria-label="Add a category">
+                            <button id="add-category-button" type="button"
+                                    class="btn btn-outline-{% if extra_errors %}danger{% else %}secondary{% endif %}"{% if form.categories|length == form.categories.max_entries %} disabled{% endif %}>
+                                <i class="fas fa-plus"></i></button>
+                        </div>
+                        {% if extra_errors %}
+                            <div class="invalid-feedback d-block">{{ extra_errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% for field in form.categories|reverse %}
+                        <div class='form-group'>
+                            <div class='input-group'>
+                                {% if field.errors %}
+                                    {{ field(class="form-control is-invalid") }}
+                                    <div class='input-group-append bg-white'>
+                                        <button id='remove-category-button' type='button'
+                                                class='btn btn-outline-secondary rounded-right'>
+                                            <i class='fas fa-minus'></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        {% for error in field.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ field(class="form-control") }}
+                                    <div class='input-group-append bg-white rounded-right'>
+                                        <button id='remove-category-button' type='button'
+                                                class='btn btn-outline-secondary'>
+                                            <i class='fas fa-minus'></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="form-group">
+                        {{ form.character_picture.label }}
+                        <div class="d-block fileinput fileinput-exists" data-provides="fileinput">
+                            <div id="preview-character-picture" class="fileinput-preview mb-2">
+                                <img src="{{ character.character_picture }}" alt="picture waiting for approval">
+                            </div>
+                            <div id="picture-selection-group">
+                                <div class="btn-group bg-white" role="group"
+                                     aria-label="Select a new character picture">
+                                    <span class="btn btn-outline-{% if form.character_picture.errors %}danger{% else %}secondary{% endif %} btn-file">
+                                        <span class="fileinput-new">Select the characters picture</span>
+                                        <span class="fileinput-exists">Change</span>
+                                        {{ form.character_picture }}
+                                    </span>
+                                </div>
+                                <div class="btn-group bg-white" role="group"
+                                     aria-label="Remove character picture">
+                                    <a href="#"
+                                       class="btn btn-outline-{% if form.character_picture.errors %}danger{% else %}secondary{% endif %} fileinput-exists"
+                                       data-dismiss="fileinput">Remove</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% if form.character_picture.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.character_picture.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.age.label }}
+                        <div class="input-group">
+                            {% if form.age.errors %}
+                                {{ form.age(class="form-control is-invalid") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">year</span>
+                                </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.age.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.age(class="form-control") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">year</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.height.label }}
+                        <div class="input-group">
+                            {% if form.height.errors %}
+                                {{ form.height(class="form-control is-invalid") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">cm</span>
+                                </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.height.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.height(class="form-control") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">cm</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.weight.label }}
+                        <div class="input-group">
+                            {% if form.weight.errors %}
+                                {{ form.weight(class="form-control is-invalid") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kg</span>
+                                </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.weight.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.weight(class="form-control") }}
+                                <div class="input-group-append">
+                                    <span class="input-group-text">kg</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.species.label }}
+                        {% if form.species.errors %}
+                            {{ form.species(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.species.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.species(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.gender.label }}
+                        {% if form.gender.errors %}
+                            {{ form.gender(class="custom-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.gender.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.gender(class="custom-select") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.occupation.label }}
+                        {% if form.occupation.errors %}
+                            {{ form.occupation(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.occupation.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.occupation(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.status.label }}
+                        {% if form.status.errors %}
+                            {{ form.status(class="custom-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.status(class="custom-select") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.description.label }}
+                        {% if form.description.errors %}
+                            {{ form.description(class="form-control is-invalid", rows="3") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.description(class="form-control", rows="3") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.official.label }}
+                        {% if form.official.errors %}
+                            {{ form.official(class="custom-select is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.official.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.official(class="custom-select") }}
+                        {% endif %}
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12 col-sm-6 order-last order-sm-first">
+                            <div class="btn-group bg-white" role="group" aria-label="Update the character">
+                                <button id="action" type="submit" class="btn btn-outline-primary">Update character
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+                            <div class="btn-group bg-white float-sm-right" role="group"
+                                 aria-label="Delete the character">
+                                <button type="button" class="btn btn-outline-danger"
+                                        data-toggle="modal"
+                                        data-target="#character-delete-modal">
+                                    Delete character
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-6 col-12 mb-4 mt-xl-3">
+            {% if character.user %}
+                {% if not character.user.is_banned %}
+                    <div id="user-info-card" class="card mx-auto shadow">
+                        <h5 class="card-header text-truncate" data-placement="right" title="<p class='h5 mt-1'>{{ character.user.username }}</p>" data-toggle="tooltip">{{ character.user.username }}</h5>
+                        <img id="profile-view-pic" src="{{ character.user.profile_picture }}" class="card-img rounded-0" alt="profile picture">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item text-truncate" data-placement="right" title="<p class='h6 mt-1'>{{ character.user.email }}</p>" data-toggle="tooltip">{{ character.user.email }}</li>
+                            {% if not character.user.is_admin %}
+                                <button type="button" class="list-group-item list-group-item-action bg-danger text-white" data-toggle="modal" data-target="#strike-user-modal{{ character.user.id }}">Strike User</button>
+                            {% else %}
+                                <li class="list-group-item text-primary">Admin</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="row justify-content-center">
+                        <div class="col-8">
+                            <div class="card"><div class="card-body text-center h3">The user that submitted the character have been BANNED</div></div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="row justify-content-center">
+                    <div class="col-8">
+                        <div class="card"><div class="card-body text-center h3">The user that submitted the character have deleted their user account</div></div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top mt-4">
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $addCategoryButton = $("#add-category-button");
+
+            let numberOfCategoryInputFields = {{ form.categories|length }};
+            let i = {{ form.categories|length }};
+
+            $addCategoryButton.on('click', function () {
+                $(`<div class='form-group'>
+                        <div class='input-group'>
+                            <input class='form-control' id='categories-${i}' name='categories-${i}' required type='text' value/>
+                            <div class='input-group-append bg-white'>
+                                <button id='remove-category-button' type='button' class='btn btn-outline-secondary rounded-right'>
+                                    <i class='fas fa-minus'></i>
+                                </button>
+                            </div>
+                        </div>
+                   </div>`).insertAfter($("#add-category-field"));
+                numberOfCategoryInputFields++;
+                i++;
+                if (numberOfCategoryInputFields === {{ form.categories.max_entries }}) {
+                    $addCategoryButton.attr('disabled', true);
+                }
+            });
+
+            $("form").on("click", "#remove-category-button", function () {
+                numberOfCategoryInputFields--;
+                $(this).closest(".form-group").remove();
+                $addCategoryButton.attr('disabled', false);
+            });
+        });
+    </script>
+{% endblock %}

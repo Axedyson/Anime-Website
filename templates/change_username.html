@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}Username Change{% endblock %}
+
+{% block content %}
+    <div id="form-container" class="mx-auto">
+        <h5 class="display-4 text-center mb-5">Username Change</h5>
+        <form method="POST" action="{{ url_for('users.change_username') }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {% if form.username.errors %}
+                    {{ form.username(class="form-control is-invalid", autofocus=True) }}
+                    <div class="invalid-feedback">
+                        {% for error in form.username.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.username(class="form-control", autofocus=True) }}
+                {% endif %}
+            </div>
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="btn-group bg-white" role="group" aria-label="Change your username">
+                        <button id="action" type="submit" class="btn btn-outline-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+    </div>
+{% endblock %}

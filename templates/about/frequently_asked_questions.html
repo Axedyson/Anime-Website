@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block meta_description %} Read the frequently asked questions and their answers, to hopefully answer some of your similar questions. {% endblock %}
+
+{% block title %}Frequently Asked Questions{% endblock %}
+
+{% block content %}
+    <h5 class="display-4 text-center mb-5">Frequently Asked Questions</h5>
+    <div class="accordion" id="FAQ-wrapper">
+        <div class="card">
+            <div class="card-header" id="questionOne">
+                <h2 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseQuestionOne" aria-expanded="true" aria-controls="collapseQuestionOne">
+                        How should I rate characters?
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseQuestionOne" class="collapse show" aria-labelledby="questionOne" data-parent="#FAQ-wrapper">
+                <div class="card-body">
+                    You can rate any character from 0-100 using the dial on the top left side of a specific character page. NOTE that you should rate the characters relative to the other characters in the same universe. 
+                    For example, don't rate Goku relative to Monkey D. Luffy, the difference in strength between them is so huge that we would probably need a 1-1.000.000 scale instead of 0-100. 
+                    It wouldn't make sense to give Luffy a rating of 98 and Goku a rating of 100 in terms of strength since the difference between their strengths is so vast. 
+                    So make sure to keep in mind when rating characters that you must do it relative to the other characters in the same specific universe. 
+                    For example, if I'm going to rate Naruto Uzumaki, I will do it relative to the other characters in the Naruto universe. 
+                    So I would probably give Naruto a rating of 98 in Ninjutsu and Tobirama a rating of 100 in Ninjutsu since I consider Tobirama better at ninjutsu than naruto because he <i>invented</i> a lot of jutsus himself. 
+                    Also, the whole Ninjutsu arsenal Naruto possesses isn't that large (different types of Rasengan, Shadow Clone, Summoning Jutsu, and that's about it) though the few jutsus he possesses are very powerful of course.
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" id="questionTwo">
+                <h2 class="mb-0">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseQuestionTwo" aria-expanded="false" aria-controls="collapseQuestionTwo">
+                        How does the rating for every character gets calculated?
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseQuestionTwo" class="collapse" aria-labelledby="questionTwo" data-parent="#FAQ-wrapper">
+                <div class="card-body">
+                    It's very simple, we are calculating the average value of every single user rating on every specific character. 
+                    The rating goes from 0-100,000 so the range will be larger than just the 0-100 scale that you will be using to rate characters. 
+                    But then you ask, how can we calculate an average value of numbers between 0 and 100 and then receiving a value between 0-100,000? Well, 
+                    we are simply just taking the three extra decimals of the average value and <i>not</i> treating them as decimals, but as whole numbers. 
+                    So, for example, a character has received four ratings in the category of strength: 77, 78, 96, 60. When taking the average value of those four numbers we receive the following value: 77.75. 
+                    That is a decimal number. But what we are doing is treating it as a whole number going from 0-100,000 so the value we just calculated will become 7,775 instead. 
+                    But why do we display the average value as a value between 0-100,000? Because we want more precision which results in better fair ranking between the characters.
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" id="questionThree">
+                <h2 class="mb-0">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseQuestionThree" aria-expanded="false" aria-controls="collapseQuestionThree">
+                        How do ranks get calculated?
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseQuestionThree" class="collapse" aria-labelledby="questionThree" data-parent="#FAQ-wrapper">
+                <div class="card-body">
+                    We are simply giving characters their specific ranks by looking at their ratings relative to each other. 
+                    So, for example, a character that has the highest rating in the category of speed inside a specific universe receives a <strong>universe category rank</strong> 
+                    of 1. And the lower ratings other characters have in that category of the same universe receive a lower <strong>universe category rank</strong> of course.
+                    So we are just ordering the characters by their ratings and then giving a rank as an index value of their specific ordering.
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" id="questionFour">
+                <h2 class="mb-0">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseQuestionFour" aria-expanded="false" aria-controls="collapseQuestionFour">
+                        What are the different types of ranks: <strong>universe category rank</strong>, <strong>universe rank</strong>, 
+                        <strong>global category rank</strong>, <strong>global rank</strong>, <strong>popularity rank</strong>, <strong>recency rank</strong>, <strong>top unofficial rank</strong>?
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseQuestionFour" class="collapse" aria-labelledby="questionFour" data-parent="#FAQ-wrapper">
+                <div class="card-body">
+                    Let's start with the <strong>universe category rank</strong>. This rank tells about how well a character performs in a specific category inside a <i>specific universe</i>. 
+                    The background color of this rank is blue.
+                    The <strong>universe rank</strong> tells about how well a character performs in <i>general</i> or <i>overall</i> inside a <i>specific universe</i>. The background color of this rank is also blue.
+                    The <strong>global category rank</strong> tells about how well a character performs in a specific category related to <i>all</i> <i>OFFICIAL</i> (unofficial characters will not have a global category rank) characters.
+                    The background color of this rank is black. The <strong>global rank</strong> tells about how well a character performs in <i>general</i> or <i>overall</i> related to <i>all</i>
+                    <i>OFFICIAL</i> (unofficial characters will not have a global rank) characters. The background color of this rank is also black.
+                    The <strong>popularity rank</strong> on the front/home page tells about how popular a character is, and that is calculated by checking how many people have <i>given</i> a <i>vote</i> on that specific character.
+                    The background color of this rank is gray.
+                    The <strong>recency rank</strong> tells about how recent a character is where the lower the number is the more recent the character is. The background color of this rank is also gray.
+                    The <strong>top unofficial rank</strong> on the front/home page is functioning just like the global rank but for <i>unofficial characters</i>. The background color of this rank is also gray
+                    <!--<strong>universe rank</strong>, <strong>global category rank</strong>, <strong>global rank</strong>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr id="child-footer" class="border-primary rounded-top mt-4">
+{% endblock %}

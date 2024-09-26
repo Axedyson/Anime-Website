@@ -1,0 +1,136 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Pictures - {{ character.name }}{% endblock %}
+
+{% block content %}
+    {% if pictures.count() %}
+        {% set loaded_pics = pagination.per_page * (pagination.page - 1) %}
+        <div class="modal fade" id="control-amount-modal" tabindex="-1" role="dialog"
+             aria-labelledby="control-amount-title"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="control-amount-title">Change displaying of live pictures</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="rangeInput">Change Amount of live pictures to display per page</label>
+                        <input id="rangeInput" class="custom-range" type="range"
+                               value="{{ pagination.per_page }}" min="1"
+                               max="50">
+                        <span id="amount-value" class="badge badge-secondary">{{ pagination.per_page }}</span>
+                        <a id="get" class="btn btn-outline-primary float-right btn-sm apply-changes disabled"
+                           href="{{ url_for('admin.edit_pictures', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}">
+                            Apply changes</a>
+                        <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% for picture in pictures %}
+            <div class="modal fade" id="character{{ loop.index + loaded_pics }}" tabindex="-1" role="dialog"
+                 aria-labelledby="edit-picture-modal-title" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="edit-picture-modal-title">Edit picture nr.
+                                <span class="badge badge-dark">{{ loop.index + loaded_pics }}</span></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <img id="character-img" src="{{ picture.character_picture }}" alt="character picture">
+                            </div>
+                            <a id="action" href="{{ url_for('admin.delete_live_picture', hashid=create_pic_hashid(picture.id, extra_salt=CHARACTER_LIVE_PICS)) }}"
+                               class="btn btn-outline-danger"><b>DELETE LIVE PICTURE</b></a>
+                            <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="card-deck justify-content-center align-items-center">
+            {% for picture in pictures %}
+                <div id="card" class="card mb-5 mx-3 shadow">
+                    <a data-toggle="modal" href="#character{{ loop.index + loaded_pics }}" role="button" class="text-decoration-none text-reset">
+                        <img id="card-pic" class="card-img-top"
+                             src="{{ picture.character_picture }}"
+                             alt="character picture">
+                        <div class="card-body">
+                            <h5 class="card-title">Nr. <span
+                                    class="badge badge-dark align-bottom">{{ loop.index + loaded_pics }}</span></h5>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+        <div class="row">
+            <div class="col-12 col-sm-4 order-last order-sm-first mt-3 mt-sm-0 text-center text-sm-left">
+                <div class="btn-group bg-white" role="group" aria-label="Change amount of pictures to display per page">
+                    <button type="button" class="btn btn-outline-primary"
+                            data-toggle="modal"
+                            data-target="#control-amount-modal"><i class="fas fa-sliders-h fa-lg"></i></button>
+                </div>
+            </div>
+            {% if pagination.links %}
+                <div class="col-12 col-sm-4">
+                    {{ pagination.links }}
+                </div>
+                <div class="col-12 col-xl-4 text-center text-xl-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% else %}
+                <div class="col-12 col-sm-8 text-center text-sm-right mt-1">
+                    {{ pagination.info }}
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="row justify-content-center">
+            <div class="col-9">
+                <h1 class="text-center text-break">No live pictures of <a
+                        href="{{ url_for('characters.character', hashid=create_char_hashid(character.id, extra_salt=CHARACTER)) }}">{{ character.name }}</a>
+                    found on the
+                    {{ pagination.page }}{% if pagination.page == 1 %}st
+                    {% elif pagination.page == 2 %}nd{% elif pagination.page == 3 %}rd{% else %}th{% endif %}
+                    page</h1>
+            </div>
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top">
+    {% endif %}
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $changeAmountRange = $("#rangeInput");
+            let $controlAmountModal = $("#control-amount-modal");
+            let $amountOfPictures = $("#amount-value");
+            let $applyChanges = $(".apply-changes");
+
+            let previousAmountRangeVal = {{ pagination.per_page }};
+
+            $controlAmountModal.on('shown.bs.modal', function () {
+                $changeAmountRange.trigger('focus');
+            });
+            $changeAmountRange.on('input', function () {
+                if (parseInt($changeAmountRange.val()) === previousAmountRangeVal) {
+                    $applyChanges.addClass('disabled');
+                } else {
+                    $applyChanges.removeClass('disabled');
+                }
+                $amountOfPictures.html($changeAmountRange.val());
+            });
+            $applyChanges.on('click', function () {
+                $changeAmountRange.off('input');
+                Cookies.set('edit_pictures_per_page', $changeAmountRange.val(), {expires: 365, path: 'admin/characters'});
+            });
+        });
+    </script>
+{% endblock %}

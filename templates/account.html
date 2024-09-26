@@ -1,0 +1,336 @@
+{% extends "layout.html" %}
+
+{% block title %}Account{% endblock %}
+
+{% block content %}
+    <div class="modal fade" id="user-delete-modal" tabindex="-1" role="dialog"
+         aria-labelledby="danger-deletion-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="danger-deletion-title">Danger!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Do you really want to delete your user account? Note that when you delete your user account every
+                    comment you have posted, pings, likes etc. will also get deleted. The characters you have submitted
+                    will not get
+                    deleted though.
+                    {% if not current_user.is_admin %}
+                        To delete them, ask a moderator on our <a href="https://discord.gg/Tw7CVUV" target="_blank">discord server</a> Or head to the
+                        <a href="{{ url_for('users.contact', character_removal='yes') }}" target="_blank">support
+                            page</a> to send a request.
+                    {% endif %}
+                    The account deletion cannot be undone!
+                </div>
+                <div class="modal-body">
+                    <form id="delete-form" method="POST" action="{{ url_for('users.delete_account') }}" novalidate>
+                        {{ delete_form.hidden_tag() }}
+                        <input type="text" autocomplete="email" id="hidden-input">
+                        <div class="form-group">
+                            {{ delete_form.current_password.label }}
+                            {{ delete_form.current_password(class="form-control", autocomplete="current-password") }}
+                        </div>
+                        <div class="form-group">
+                            {{ delete_form.delete_field.label }}
+                            {{ delete_form.delete_field(class="form-control") }}
+                            <small class="form-text text-muted">{{ delete_form.delete_field.description }}</small>
+                        </div>
+                        <button id="delete-account-button" type="submit" class="btn btn-outline-danger"><b>DELETE USER
+                            ACCOUNT</b>
+                        </button>
+                    </form>
+                    <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="mail-settings-modal" tabindex="-1" role="dialog"
+         aria-labelledby="mail-settings-title"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mail-settings-title">Mail Settings</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="email-form" method="POST" action="{{ url_for('users.change_email_settings') }}"
+                          novalidate>
+                        {{ email_form.hidden_tag() }}
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                {{ email_form.news_letters(class="custom-control-input") }}
+                                {{ email_form.news_letters.label(class="custom-control-label") }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                {{ email_form.user_pings(class="custom-control-input") }}
+                                {{ email_form.user_pings.label(class="custom-control-label") }}
+                            </div>
+                        </div>
+                        <button id="apply-email-settings-button" type="submit" class="btn btn-sm btn-outline-primary"
+                                disabled>Apply changes
+                        </button>
+                    </form>
+                    <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="user-settings" class="mx-auto">
+        <div class="card border-primary mb-4">
+            <h5 class="card-header bg-primary font-weight-normal text-white">Profile</h5>
+            <div class="card-body">
+                <p class="d-block mb-0">
+                    Username
+                    <span data-placement="top"
+                          title="<p class='h5 mt-1'>{{ current_user.username }}</p>"
+                          data-toggle="tooltip" id="profile-text"
+                          class="ml-3 float-right text-truncate">{{ current_user.username }}</span>
+                </p>
+            </div>
+            <div class="card-body">
+                <p class="d-block mb-0">
+                    Email
+                    <span data-placement="top"
+                          title="<p class='h5 mt-1'>{{ current_user.email }}</p>"
+                          data-toggle="tooltip" id="profile-text"
+                          class="ml-3 float-right text-truncate">{{ current_user.email }}</span>
+                </p>
+            </div>
+            <div class="card-body">
+                <p class="d-block mb-0">
+                    Profile Picture
+                    <span class="ml-3 float-right"><img id="small-profile-pic" src="{{ current_user.profile_picture }}"
+                                                        alt="profile picture"></span>
+                </p>
+            </div>
+            {% if current_user.is_admin %}
+                <div class="card-body">
+                    <p class="d-block mb-0 text-danger">
+                        Admin
+                        <span data-placement="top"
+                              title="<p class='h5 text-danger mt-1'>Yes, you are an admin, remember that!</p>"
+                              data-toggle="tooltip" id="profile-text"
+                              class="ml-3 float-right text-truncate">Yes, you are an admin, remember that!</span>
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card border-info mb-4">
+            <h5 class="card-header bg-info font-weight-normal text-white">Account Actions</h5>
+            <div class="card-body">
+                <a href="{{ url_for('users.change_email') }}" class="d-block mb-0">Change Email Address</a>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('users.change_password') }}" class="d-block mb-0">Change Password</a>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('users.change_username') }}" class="d-block mb-0">Change Username</a>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('users.update_profile_picture') }}" class="d-block mb-0">Update Profile Picture</a>
+            </div>
+            {% if current_user.profile_picture[79:] != 'default' %}
+                <div class="card-body">
+                    <a href="{{ url_for('users.remove_profile_picture') }}" class="d-block mb-0">Remove profile
+                        picture</a>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <a href="#mail-settings-modal" data-toggle="modal" class="d-block mb-0">Email settings</a>
+            </div>
+            {% if not current_user.email_confirmed %}
+                <div class="card-body">
+                    <a id="resend-email" href="{{ url_for('users.resend_email_confirmation') }}" class="d-block mb-0">
+                        Resend Email Confirmation</a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card border-info mb-4">
+            <h5 class="card-header bg-info font-weight-normal text-white">Statistics</h5>
+            <div class="card-body">
+                <p class="d-block mb-0">
+                    Member since
+                    <span class="ml-3 float-right">{{ current_user.joined_at.strftime("%I:%M %p %A %B %d, %Y") }}</span>
+                </p>
+            </div>
+            {% if current_user.last_log_in %}
+                <div class="card-body">
+                    <p class="d-block mb-0">
+                        Last Logged In
+                        <span class="ml-3 float-right">{{ current_user.last_log_in.strftime("%I:%M %p %A %B %d, %Y") }}</span>
+                    </p>
+                </div>
+            {% else %}
+                <div class="card-body">
+                    <p class="d-block mb-0">
+                        First time logged in. Welcome!
+                    </p>
+                </div>
+            {% endif %}
+            {% if current_user.email_confirmed %}
+                <div class="card-body">
+                    <p class="d-block mb-0">
+                        Email confirmed on
+                        <span class="ml-3 float-right">{{ current_user.email_confirmed_on.strftime("%I:%M %p %A %B %d, %Y") }}</span>
+                    </p>
+                </div>
+            {% else %}
+                <div class="card-body"><p class="d-block mb-0">Email has not been confirmed!</p></div>
+            {% endif %}
+        </div>
+        <div class="btn-group bg-white" role="group" aria-label="Delete your user account">
+            <button id="delete-modal-trigger" type="button" class="btn btn-outline-danger" data-toggle="modal"
+                    data-target="#user-delete-modal">
+                Delete user account
+            </button>
+        </div>
+        <hr id="child-footer" class="border-primary rounded-top mt-4">
+    </div>
+{% endblock %}
+
+{% block code_js %}
+    <script>
+        $(function () {
+            let $applyEmailSettingsButton = $("#apply-email-settings-button");
+            let $deleteAccountButton = $("#delete-account-button");
+            let $deleteModalTrigger = $("#delete-modal-trigger");
+            let $emailSettingsModal = $("#mail-settings-modal");
+            let $emailNewsInput = $("#email_news_letters");
+            let $userDeleteModal = $("#user-delete-modal");
+            let $emailUserPings = $("#email_user_pings");
+            let $passwordField = $("#current_password");
+            let $emailSettingsForm = $("#email-form");
+            let $deleteField = $("#delete_field");
+            let $deleteForm = $("#delete-form");
+
+            let previousNewsInput = $emailNewsInput.is(":checked");
+            let previousPingsInput = $emailUserPings.is(":checked");
+
+            $emailSettingsModal.on('shown.bs.modal', function () {
+                $emailNewsInput.trigger('focus');
+            });
+
+            $emailNewsInput.on('change', function () {
+                if ($emailNewsInput.is(":checked") === previousNewsInput && $emailUserPings.is(":checked") === previousPingsInput) {
+                    $applyEmailSettingsButton.attr('disabled', true);
+                } else {
+                    $applyEmailSettingsButton.attr('disabled', false);
+                }
+            });
+            $emailUserPings.on('change', function () {
+                if ($emailNewsInput.is(":checked") === previousNewsInput && $emailUserPings.is(":checked") === previousPingsInput) {
+                    $applyEmailSettingsButton.attr('disabled', true);
+                } else {
+                    $applyEmailSettingsButton.attr('disabled', false);
+                }
+            });
+
+            $emailSettingsForm.on('submit', function () {
+                $emailNewsInput.off('change');
+                $emailUserPings.off('change');
+                // Disabling form submission of the delete form here, don't have to do it vice versa since
+                // "event.preventDefault" is being called at delete form submission!
+                $deleteForm.submit(false);
+                $applyEmailSettingsButton.attr('disabled', true).html("Please wait...");
+            });
+
+            function showDeleteFieldError(message) {
+                let $deleteInvalidFeedback = $("#delete.invalid-feedback");
+                if (!$deleteInvalidFeedback.length) {
+                    $('<div id="delete" class="invalid-feedback"></div>').insertAfter($deleteField);
+                } else {
+                    $deleteInvalidFeedback.text("");
+                }
+                $.each(message, function (index, value) {
+                    $("#delete.invalid-feedback").append(value);
+                });
+                $deleteField.addClass('is-invalid');
+            }
+
+            function showPasswordFieldError(message) {
+                let passwordInvalidFeedback = $("#password.invalid-feedback");
+                if (!passwordInvalidFeedback.length) {
+                    $('<div id="password" class="invalid-feedback"></div>').insertAfter($passwordField);
+                } else {
+                    passwordInvalidFeedback.text("");
+                }
+                $.each(message, function (index, value) {
+                    $("#password.invalid-feedback").append(value);
+                });
+                $passwordField.addClass('is-invalid');
+            }
+
+            function resetDeleteField() {
+                $deleteField.removeClass('is-invalid');
+                $('#delete.invalid-feedback').remove();
+            }
+
+            function resetPasswordField() {
+                $passwordField.removeClass('is-invalid');
+                $('#password.invalid-feedback').remove();
+            }
+
+            function reset() {
+                $deleteField.val("").removeClass('is-invalid');
+                $passwordField.val("").removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+            }
+
+            $userDeleteModal.on('shown.bs.modal', function () {
+                $passwordField.trigger('focus');
+            });
+            $deleteModalTrigger.on("click", function () {
+                reset();
+            });
+            $deleteForm.on('submit', function (event) {
+                $.ajax({
+                    type: $deleteForm.attr('method'),
+                    url: $deleteForm.attr('action'),
+                    data: $deleteForm.serialize(),
+                    success: function () {
+                        window.location.href = "{{ url_for('users.login') }}";
+                    },
+                    error: function (data) {
+                        let json = data.responseJSON;
+                        if (json !== undefined) {
+                            if (json.delete_errors.length > 0) {
+                                showDeleteFieldError(json.delete_errors);
+                            } else {
+                                resetDeleteField();
+                            }
+                            if (json.password_errors.length > 0) {
+                                showPasswordFieldError(json.password_errors)
+                            } else {
+                                resetPasswordField();
+                            }
+                        } else {
+                            showDeleteFieldError(["Something went wrong, sorry"]);
+                            showPasswordFieldError(["Something went wrong, sorry"])
+                        }
+                    },
+                    beforeSend: function () {
+                        $deleteAccountButton.attr('disabled', true).html("Please wait...");
+                    },
+                    complete: function () {
+                        $deleteAccountButton.attr('disabled', false).html("<b>DELETE USER ACCOUNT</b>");
+                    }
+                });
+                event.preventDefault();
+            });
+        });
+        {% if launch_email_modal %}
+            $(window).on('load', function () {
+                $('#mail-settings-modal').modal('show');
+            });
+        {% endif %}
+    </script>
+{% endblock %}

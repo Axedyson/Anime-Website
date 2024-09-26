@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags, I think xD -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Welcome to TopAnimeCharacters.{% block meta_description %} {% endblock %}Join the online community, create your anime and manga characters, explore the comment sections, and rate anime characters!">
+    <title>{% block main_title %}{% block title %}{% endblock %} - TopAnimeCharacters.com{% endblock %}</title>
+    <link rel="canonical" href="https://topanimecharacters.com/">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- Jasny Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/4.0.0/css/jasny-bootstrap.min.css" integrity="sha256-PGFdiDxerCeG50qqJg6zEaXpjGcJYVGe0LZS5dbh1rY=" crossorigin="anonymous">
+    <!-- Osano cookie banner CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css" integrity="sha256-zQ0LblD/Af8vOppw18+2anxsuaz3pWYyVWi+bTvTH8Q=" crossorigin="anonymous">
+    <!-- Animate.css CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" integrity="sha256-PHcOkPmOshsMBC+vtJdVr5Mwb7r0LkSVJPlPrp/IMpU=" crossorigin="anonymous">
+    {% block lib_css %}{% endblock %}
+    {% block file_css %}
+        <!-- Homemade CSS -->
+        {% assets "main_css" %}
+            <link rel="stylesheet" href="{{ ASSET_URL }}">
+        {% endassets %}
+    {% endblock %}
+    <!-- Icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/static/icons/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/static/icons/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/static/icons/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/static/icons/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/static/icons/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/static/icons/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/static/icons/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/static/icons/apple-touch-icon-152x152.png">
+    <link rel="icon" type="image/png" href="/static/icons/favicon-196x196.png" sizes="196x196">
+    <link rel="icon" type="image/png" href="/static/icons/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/static/icons/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/static/icons/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/static/icons/favicon-128.png" sizes="128x128">
+    <meta name="application-name" content="&nbsp;">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-square70x70logo" content="/static/icons/mstile-70x70.png">
+    <meta name="msapplication-TileImage" content="/static/icons/mstile-144x144.png">
+    <meta name="msapplication-square150x150logo" content="/static/icons/mstile-150x150.png">
+    <meta name="msapplication-wide310x150logo" content="/static/icons/mstile-310x150.png">
+    <meta name="msapplication-square310x310logo" content="/static/icons/mstile-310x310.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="shortcut icon" href="/static/icons/favicon.ico">
+    <!-- Font Awesome icons -->
+    <script src="https://kit.fontawesome.com/1eb1964f63.js" crossorigin="anonymous"></script>
+    <!-- Google ads -->
+    <script data-ad-client="ca-pub-1173400155815158" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+</head>
+<body class="bg-light">
+{% set endpoint = request.endpoint %}
+<!-- header content here -->
+<nav id="nav-bar" role="navigation" class="navbar fixed-top navbar-expand-lg navbar-dark">
+    <a class="navbar-brand" href="{{ url_for('central.home') }}">
+        <img id="logo" src="/static/icons/andyson_pp.png" alt="the website logo">
+    </a>
+    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse font-weight-bold" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item{% if endpoint == 'characters.render_characters' %} active{% endif %}">
+                <a class="nav-link" href="{{ url_for('characters.render_characters') }}">Top Official Characters
+                    {% if endpoint == 'characters.render_characters' %}
+                        <span class="sr-only">(current)</span>{% endif %}</a>
+            </li>
+            <li class="nav-item{% if endpoint == 'characters.add_character' %} active{% endif %}">
+                <a class="nav-link" href="{{ url_for('characters.add_character') }}">Add Anime Character
+                    {% if endpoint == 'characters.add_character' %}
+                        <span class="sr-only">(current)</span>{% endif %}</a>
+            </li>
+            <li class="nav-item{% if endpoint == 'characters.render_universes' %} active{% endif %}">
+                <a class="nav-link" href="{{ url_for('characters.render_universes') }}">Universes
+                    {% if endpoint == 'characters.render_universes' %}
+                        <span class="sr-only">(current)</span>{% endif %}</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav mr-2">
+            {% if current_user.is_authenticated %}
+                <li class="nav-item {% if endpoint == 'users.account' %} active{% endif %}">
+                    <a title="Account" class="nav-link account-related-button" href="{{ url_for('users.account') }}"><i
+                            class="fas fa-user-circle fa-2x"></i>
+                        {% if endpoint == 'users.account' %}
+                            <span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+                <li class="nav-item {% if endpoint == 'users.logout' %} active{% endif %}">
+                    <a title="Log Out" class="nav-link account-related-button" href="{{ url_for('users.logout') }}">
+                        <i class="fas fa-sign-out-alt fa-2x"></i>
+                        {% if endpoint == 'users.logout' %}
+                            <span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+            {% else %}
+                <li class="nav-item {% if endpoint == 'users.login' %} active{% endif %}">
+                    <a title="Log In" class="nav-link account-related-button" href="{{ url_for('users.login') }}"><i
+                            class="fas fa-sign-in-alt fa-2x"></i>
+                        {% if endpoint == 'users.login' %}
+                            <span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+                <li class="nav-item {% if endpoint == 'users.register' %} active{% endif %}">
+                    <a title="Sign Up" class="nav-link account-related-button" href="{{ url_for('users.register') }}"><i
+                            class="fas fa-user-plus fa-2x"></i>
+                        {% if endpoint == 'users.register' %}
+                            <span class="sr-only">(current)</span>{% endif %}</a>
+                </li>
+            {% endif %}
+        </ul>
+        <form class="my-2" method="GET" action="{{ url_for('characters.search') }}">
+            <div class="input-group">
+                <div class="input-group-prepend bg-white rounded-left"><button id="filter-search-modal-trigger" class="btn btn-secondary" type="button" title="Filter Search" data-toggle="modal" data-target="#filter-search-modal"><i class="fas fa-filter"></i></button></div>
+                <input type="text" name="query" class="form-control" placeholder="Search..." aria-label="Search" id="search-input" aria-describedby="search-button" autocomplete="off" required>
+                <div class="input-group-append bg-white rounded-right"><button class="btn btn-primary" type="submit" id="search-button" disabled><i class="fas fa-search"></i></button></div>
+            </div>
+        </form>
+    </div>
+</nav>
+<!-- main content here -->
+<div id="main-content" class="container">
+    <!-- Filter search modal -->
+    <div class="modal fade" id="filter-search-modal" tabindex="-1" role="dialog" aria-labelledby="filter-search-title" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filter-search-title">Filter Search</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form method="GET" id="character-search-form" action="{{ url_for('characters.search') }}" novalidate>
+                        <div class="form-group text-center">
+                            <label class="modal-title h5 mb-2" for="search-category">Search Bar Category</label>
+                            <select class="custom-select" id="search-category">
+                                <option value="all"{% if request.cookies.get('search_category_toggle', None) == 'all' %} selected{% endif %}>All</option>
+                                <option value="characters"{% if request.cookies.get('search_category_toggle', None) == 'characters' %} selected{% endif %}>Characters</option>
+                                <option value="universes"{% if request.cookies.get('search_category_toggle', None) == 'universes' %} selected{% endif %}>Universes</option>
+                            </select>
+                        </div>
+                        <hr id="child-footer" class="border-secondary rounded-pill mb-2">
+                        <h5 class="modal-title text-center">Character Filter Search</h5>
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input class="form-control" id="name" name="name" type="text">
+                        </div>
+                        <div class="form-group">
+                            <label for="universe">Universe</label>
+                            <input class="form-control" id="universe" name="universe" type="text">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-12 col-sm-4">
+                                <label for="age">Age</label>
+                                <div class="input-group">
+                                    <input class="form-control" id="age" name="age" type="text">
+                                    <div class="input-group-append"><span class="input-group-text">year</span></div>
+                                </div>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label for="height">Height</label>
+                                <div class="input-group">
+                                    <input class="form-control" id="height" name="height" type="text">
+                                    <div class="input-group-append"><span class="input-group-text">cm</span></div>
+                                </div>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label for="weight">Weight</label>
+                                <div class="input-group">
+                                    <input class="form-control" id="weight" name="weight" type="text">
+                                    <div class="input-group-append"><span class="input-group-text">kg</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="species">Species</label>
+                            <input class="form-control" id="species" name="species" type="text">
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select class="custom-select" id="gender" name="gender">
+                                <option value="">Choose...</option>
+                                <option value="Female">Female</option>
+                                <option value="Male">Male</option>
+                                <option value="Hermaphrodite">Hermaphrodite</option>
+                                <option value="Genderless">Genderless</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="occupation">Occupation</label>
+                            <input class="form-control" id="occupation" name="occupation" type="text">
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select class="custom-select" id="status" name="status">
+                                <option value="">Choose...</option>
+                                <option value="Alive">Alive</option>
+                                <option value="Dead">Dead</option>
+                                <option value="Missing">Missing</option>
+                                <option value="Gone">Gone</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="official">Official or unofficial</label>
+                            <select class="custom-select" id="official" name="official">
+                                <option value="">Choose...</option>
+                                <option value="Yes">Official</option>
+                                <option value="No">Unofficial</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="action" class="btn btn-outline-primary character-search-button" disabled>Character Search</button>
+                    </form>
+                    <hr id="child-footer" class="border-primary rounded-top mt-4 mb-0">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block content %}{% endblock %}
+    <!-- Spoiler cookie -->
+    {% if request.cookies.get('spoilerconsent_status', None) != 'dismiss' %}
+        <div class="alert alert-warning alert-dismissible alert-fixed-top fade show mt-5 shadow rounded" id="cookie" role="alert">
+            <h4 class="alert-heading">Spoilers!</h4>
+            <hr>
+            <p>
+                Sorry if you have already been spoiled by some content on this website, but we are telling you this
+                anyway.
+                This site contains huge spoilers for
+                animes, mangas, etc. You may be lucky by just watching the rank
+                order without visiting the very specific page of a character.
+                By visiting a specific page of a character there are definitely spoilers.
+                Spoilers on this site is unavoidable, it's inevitable.
+                Now you have been warned!
+                By visiting and using this website you are to blame yourself for getting content spoiled if it happens.
+                Click on the "I understand" button at the top to the right to remove the spoiler warning.
+            </p>
+            <button type="button"
+                    onclick="Cookies.set('spoilerconsent_status', 'dismiss', { expires: 365 });"
+                    data-dismiss="alert"
+                    class="close"
+                    aria-label="Close">I understand
+            </button>
+        </div>
+    {% endif %}
+</div>
+<!-- footer content here -->
+<footer class="container-fluid bg-dark">
+    <div class="row">
+        <div class="col-12 col-xl-4 py-3 order-last order-xl-first">
+            <div class="row">
+                <div class="col mb-3 mb-xl-5">
+                    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with buttons of the following actions: {% if current_user.is_authenticated and current_user.is_admin %}Approve either pictures or characters, send global mail{% else %} Go to home, contact support{% endif %}, and view the Frequently Asked Questions page">
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                            <button type="button" class="btn btn-danger dropdown-toggle mr-2" data-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">Approve
+                            </button>
+                            <div class="dropdown-menu shadow">
+                                <a id="get"
+                                   onclick="$('.dropdown-menu').on('click', function(e) {e.stopPropagation();})"
+                                   class="dropdown-item{% if endpoint == 'admin.approve_characters' %} active{% endif %}"
+                                   href="{{ url_for('admin.approve_characters') }}">Characters</a>
+                                <div class="dropdown-divider"></div>
+                                <a id="get"
+                                   onclick="$('.dropdown-menu').on('click', function(e) {e.stopPropagation();})"
+                                   class="dropdown-item{% if endpoint == 'admin.approve_pictures' %} active{% endif %}"
+                                   href="{{ url_for('admin.approve_pictures') }}">Pictures</a>
+                            </div>
+                            <a id="get" href="{{ url_for('admin.mail') }}" class="btn btn-danger mr-2">Mail</a>
+                        {% else %}
+                            <a id="get" href="{{ url_for('central.home') }}" class="btn btn-secondary mr-2">Home</a>
+                            <a href="{{ url_for('users.contact') }}" class="btn btn-secondary mr-2" target="_blank">Contact us</a>
+                        {% endif %}
+                        <a href="{{ url_for('users.frequently_asked_questions') }}" class="btn btn-secondary" target="_blank">FAQ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col mt-2 mt-xl-4">
+                    <small class="text-white align-bottom">
+                        <span class="font-italic align-bottom">Engineered by a guy with the first name of Anders...</span>
+                        © 2019 All Rights Reserved, i guess xD.
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4 py-3">
+            <div class="card text-white border-secondary bg-dark">
+                <div class="card-header"> 
+                    About - 
+                    <a target="_blank" href="{{ url_for('users.cookies_policy') }}" class="card-link">Cookies Policy</a> 
+                    <a target="_blank" href="{{ url_for('users.privacy_policy') }}" class="card-link">Privacy Policy</a> 
+                    <a target="_blank" href="{{ url_for('users.terms_of_use') }}" class="card-link">Terms Of Use</a> 
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">
+                        Note that this site uses various services from Google such as their ads (Google AdSense) and reCAPTCHA.
+                        These services use tracking cookies to gather information you provide as a user on the website.
+                        If you don't consent to the use of these cookies we ask you kindly to leave this website.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4 py-3">
+            <div class="card text-white border-secondary bg-dark">
+                <div class="card-header">
+                    Discord - <a href="https://discord.gg/Tw7CVUV" target="_blank" class="card-link">Link to channel</a>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small">Join the discord to suggest something new to the website,
+                        report bugs or just chat with fellow anime/manga interested people xD.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- Bootstrap required JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<!-- Jasny Bootstrap required JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/4.0.0/js/jasny-bootstrap.min.js" integrity="sha256-IYxM21PnjkYhfOUWo1pWQW6Iy4UKMO3zylWIi2ze2mk=" crossorigin="anonymous"></script>
+<!-- Osano cookie banner JS -->
+<script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" integrity="sha256-5VhCqFam2Cn+yjw61zbBNrbHVJ6SRydPeKopYlngbiQ=" crossorigin="anonymous"></script>
+<script>
+    $(function () {
+        // Osano cookie banner popup
+        window.cookieconsent.initialise({
+            "palette": {
+                "popup": {
+                    "background": "#007bff"
+                },
+                "button": {
+                    "background": "#fff",
+                    "text": "#237afc"
+                }
+            },
+            "theme": "classic",
+            "content": {
+                "message": "This website uses cookies to ensure you get the best experience on our website. If you don't consent to the use of these cookies we ask you kindly to leave this website.",
+                "href": "https://topanimecharacters.com/cookies_policy"
+            }
+        });
+        // This website doesn't quite support IE
+        if ((navigator.userAgent.indexOf("MSIE") !== -1) || (document.documentMode)) {
+            alert('topanimecharacters.com doesn\'t quite support Internet Explorer. Please use another browser to get the fullest experience, sorry.');
+            $("div#main-content").append(
+                "<div class='alert alert-danger alert-dismissible alert-fixed-top fade show shadow' role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>This website doesn't <strong>work</strong> well with <strong>Internet Explorer</strong>. Please use another <a target='_blank' href='https://browsehappy.com/'>browser</a>, like Google Chrome, Mozilla Firefox, Microsoft Edge, ect. to get the fullest experience!</div>"
+            );
+        }
+    });
+</script>
+<!-- Bootstrap Notify JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mouse0270-bootstrap-notify/3.1.3/bootstrap-notify.min.js"
+        integrity="sha256-LbneT1/CeDfUKV3znZTDTMwzbDHQIyL398rWmujjONo=" crossorigin="anonymous"></script>
+<!-- Bootstrap Auto-Hiding Navbar JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-autohidingnavbar/4.0.0/jquery.bootstrap-autohidingnavbar.min.js"
+        integrity="sha256-Jbr5aqov83eQaJnnSDDIY36ROZFKxkED7kSM2yp7gvw=" crossorigin="anonymous"></script>
+<!-- js-cookie JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js"
+        integrity="sha256-oE03O+I6Pzff4fiMqwEGHbdfcW7a3GRRxlL+U49L5sA=" crossorigin="anonymous"></script>
+<!-- Jquery AutoComplete JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.10/jquery.autocomplete.min.js"
+        integrity="sha256-xv9tRiSlyBQMvBkQeqNyojOQf45uTVXQAtIMrmgqV18=" crossorigin="anonymous"></script>
+{% block lib_js %}{% endblock %}
+{% block file_js %}
+    <!-- Homemade JS -->
+    {% assets "main_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+{% endblock %}
+<script>
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+            }
+        }
+    });
+    $(function () {
+        let $filterSearchButton = $('#filter-search-modal-trigger');
+        let $accountRelatedButton = $(".account-related-button");
+        let $characterSearchButton = $(".character-search-button");
+        let $characterSearchForm = $("#character-search-form");
+        let $filterSearchModal = $("#filter-search-modal");
+        let $searchCategory = $("#search-category");
+        let $searchButton = $("#search-button");
+        let $searchInput = $("#search-input");
+        let $navBar = $("#nav-bar");
+        $filterSearchModal.on('shown.bs.modal', function () {
+            $searchCategory.trigger('focus');
+        });
+        $searchCategory.on('change', function () {
+            $searchInput.autocomplete().clearCache();
+            Cookies.set('search_category_toggle', $searchCategory.val(), {expires: 365});
+        });
+        $navBar.autoHidingNavbar({
+            hideOffset: '50',
+            showOnBottom: false
+        });
+        $navBar.on('focusin', function () {
+            $navBar.autoHidingNavbar('show');
+        });
+        $searchInput.on('input', function () {
+            if ($searchInput.val().length) {
+                $searchButton.attr('disabled', false);
+            } else {
+                $searchButton.attr('disabled', true);
+            }
+        });
+        $searchInput.on('focus', function () {
+            // If i make the search bar bigger when the screen width is smaller than 364 px, then it wouldn't look good (layout will break)
+            if ($(window).outerWidth() > 363) {
+                $searchInput.outerWidth(250);
+            }
+            // If the user chooses not to run the search post request, I wanna make sure that the suggestions are still
+            // enabled, if the user actually wants to search after some other queries or whatever.
+            $searchInput.autocomplete().enable();
+            // If the user chooses not to run the search post request, I wanna make sure that the search button is still
+            // enabled (not disabled), if the user actually wants to search again or whatever.
+            if ($searchInput.val().length) {
+                $searchButton.attr('disabled', false);
+            } else {
+                $searchButton.attr('disabled', true);
+            }
+        });
+        $searchInput.on('focusout', function () {
+            $searchInput.autocomplete().hide();
+            $searchInput.outerWidth(190);
+        });
+        $filterSearchButton.on('mousedown', function () {
+            return false;
+        });
+        $accountRelatedButton.on('mousedown', function () {
+            return false;
+        });
+        $searchInput.autocomplete({
+            serviceUrl: "{{ url_for('characters.live_search') }}",
+            groupBy: 'category',
+            zIndex: 1049,
+            triggerSelectOnValidInput: false,
+            preventBadQueries: false,
+            deferRequestBy: 100,
+            preserveInput: true,
+            appendTo: $searchInput.closest('form'),
+            formatResult: function (suggestion, currentValue) {
+                if (suggestion.data.category === 'Characters') {
+                    return `
+                    <div class="card mb-1 mx-1">
+                        <a href="${suggestion.data.link}" class="text-decoration-none text-reset auto-suggest-link">
+                            <div class="row no-gutters">
+                                <img id="search-character-picture" src="${suggestion.data.source}" class="card-img float-left" alt="character picture">
+                                <div class="col ml-2">
+                                    <div class="row">
+                                        <div class="col">
+                                            <p class="mb-1 text-truncate">${suggestion.value}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <hr id="auto-suggest-hr" class="my-0">
+                                        </div>
+                                    </div>
+                                    <div class="row mt-1">
+                                        <div class="col">
+                                            <span id="search-character-rank" class="badge badge-dark mr-2 text-truncate float-left">${suggestion.data.ratings.global_rank ? suggestion.data.ratings.global_rank : '?'}</span>
+                                            <span class="badge badge-success mr-2 float-left">${suggestion.data.ratings.overall_score ? suggestion.data.ratings.overall_score : '?'}</span>
+                                            <small class="float-left">${suggestion.data.official ? 'Official': 'Unofficial'}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="card mb-1 mx-1">
+                        <a href="${suggestion.data.link}" class="text-decoration-none text-reset auto-suggest-link">
+                            <div class="py-1 px-2">
+                                <small class="text-truncate auto-suggest-universe">${suggestion.value}</small>
+                            </div>
+                        </a>
+                    </div>`;
+                }
+            },
+            formatGroup: function (suggestion, category) {
+                return `<div class="mb-1 py-1 px-2 font-weight-normal card-header card-footer rounded-0">${category}</div>`;
+            },
+            onSearchStart: function () {
+                let $autocompleteSuggestions = $('.autocomplete-suggestions');
+                $autocompleteSuggestions.addClass('bg-white border border-secondary rounded-bottom');
+                $autocompleteSuggestions.html(`<div class="text-center"><div class="spinner-grow" role="status"><span class="sr-only">Loading...</span></div></div>`).show();
+                readjustAutocompleteSuggestionsDropdown();
+            },
+            onSearchComplete: function () {
+                $('.autocomplete-suggestions').html();
+            },
+            beforeRender: function (container) {
+                container.children('.autocomplete-no-suggestion').addClass('font-weight-normal py-1 px-2');
+                container.find('.auto-suggest-universe').css('display', 'block');
+                readjustAutocompleteSuggestionsDropdown();
+            },
+            onSelect: function (suggestion) {
+                $searchInput.trigger('blur');
+                window.location.href = suggestion.data.link;
+            },
+            maxHeight: 500,
+            showNoSuggestionNotice: true,
+            noSuggestionNotice: 'Sorry, found no result...',
+            type: 'POST',
+            dataType: "json",
+            onSearchError: function (query, jqXHR, textStatus, errorThrown) {
+                let json = jqXHR.responseJSON;
+                if (json !== undefined) {
+                    insertFlashMessage(json.message);
+                } else {
+                    if (errorThrown !== 'abort') {
+                        insertFlashMessage("Something went wrong, sorry");
+                    }
+                }
+            }
+        });
+        $characterSearchForm.on('input change', function () {  // Need to listen for the change event too because of edge not triggering input events on select field user input.
+            let input = false;
+            $('[name]', $characterSearchForm).each(function () {
+                if ($(this).val()) input = true;
+            });
+            if (input) $characterSearchButton.attr('disabled', false);  // If input exist, then make sure that the user can submit the form.
+            else $characterSearchButton.attr('disabled', true);  // If no input exist, then make sure that the user can't submit the form.
+        });
+        // prevent blur so it lets the user actually trigger the links that there are in the dropdown before it hides itself!
+        $(document).on('mousedown.autocomplete', '.autocomplete-suggestions', function () {
+            return false;
+        });
+        $(window).on('resize', function(){
+            readjustAutocompleteSuggestionsDropdown();
+        });
+        $navBar.on('hide.autoHidingNavbar', function () {
+            $searchInput.trigger('blur');
+        });
+        function readjustAutocompleteSuggestionsDropdown() {
+            let $autocompleteSuggestions = $('.autocomplete-suggestions');
+            if ($(window).outerWidth() < 992) {
+                $autocompleteSuggestions.find('p').css('max-width', $searchInput.outerWidth() - 70);
+                $searchInput.autocomplete().setOptions({width: $searchInput.outerWidth()});
+                $autocompleteSuggestions.css('left', 57);
+            } else {
+                $autocompleteSuggestions.find("p[id!='search-character-rank']").css('max-width', 180);
+                $searchInput.autocomplete().setOptions({width: 250});
+                $autocompleteSuggestions.css('left', $(window).width() - 307);
+            }
+        }
+    });
+</script>
+{% block code_js %}{% endblock %}
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <script>
+            $(function () {
+                {% for category, message in messages %}
+                    insertFlashMessage("{{ message }}", "{{ category | title }}");
+                {% endfor %}
+            });
+        </script>
+    {% endif %}
+{% endwith %}
+</body>
+</html>
